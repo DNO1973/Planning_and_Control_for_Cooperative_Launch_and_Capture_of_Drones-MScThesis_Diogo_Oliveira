@@ -33,18 +33,33 @@ sstlightgray    = [200,200,200]/255;
 % hold off;
 
 %%%%%%%%%
-psi_l = deg2rad(30);  
-gamma_l = deg2rad(90);
-ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
 
 
- 
- t = linspace(0,10000,100);
- e = ql*t;
- plot3( e(:,1), e(:,2),  e(:,3), '-');
- 
- hold on;
-plot3(out.fixout.Data(:,1), out.fixout.Data(:,2), out.fixout.Data(:,3));
+% psi_l = 3*pi/4;  
+% gamma_l = pi;
+% ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
+% 
+% 
+%  
+%  t = linspace(0,10000,100);
+%  e = ql*t;
+%  plot3( e(:,1), e(:,2),  e(:,3), '-');
+%  
+%  hold on;
+% plot3(out.fixlineout.Data(:,1), out.fixlineout.Data(:,2), out.fixlineout.Data(:,3));
+%  
+%  grid on;
+%   
+% xlabel('x [m]');
+% ylabel('y [m]');
+% zlabel('z [m]');
+% 
+%  hold off;
+
+
+
+%hold on;
+plot3(out.fixorbout.Data(:,1), out.fixorbout.Data(:,2), out.fixorbout.Data(:,3));
  
  grid on;
   

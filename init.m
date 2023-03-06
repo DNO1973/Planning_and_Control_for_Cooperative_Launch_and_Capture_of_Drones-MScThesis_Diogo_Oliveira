@@ -31,7 +31,5 @@ Param.p0 = p0;
 Param.v0 = v0;
 %Param.R0 = eye(3);
 %Param.om0 = [0;0;0.1];
-
-%Param.p_ref_static = [0.5;0;1];
-p_ref_static = [0.5;1;1];
-Param.p_ref_static = [zeros(3,20/dT+1), p_ref_static*ones(1,(Tend-20)/dT)];
+Param.p_ref_static = [0.5;0;1];
+Param.p_ref_static = [3;3;3];

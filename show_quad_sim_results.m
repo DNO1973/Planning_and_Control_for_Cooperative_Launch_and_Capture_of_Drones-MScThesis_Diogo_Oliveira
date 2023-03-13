@@ -10,16 +10,16 @@ sstgray         = [70,70,70]/255;
 sstlightgray    = [200,200,200]/255;
 
 
-plot3(out.simout.Data(1,1), out.simout.Data(1,2), out.simout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
+plot3(out.quadout.Data(1,1), out.quadout.Data(1,2), out.quadout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
 
 hold on;
 
-plot3(out.simout.Data(end,1), out.simout.Data(end,2), out.simout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
+plot3(out.quadout.Data(end,1), out.quadout.Data(end,2), out.quadout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
 
 
-plot3(out.simout.Data(:,10), out.simout.Data(:,11), out.simout.Data(:,12), '-','Color',sstgreen);
+plot3(out.quadout.Data(:,10), out.quadout.Data(:,11), out.quadout.Data(:,12), '-','Color',sstgreen);
 
-plot3(out.simout.Data(:,1), out.simout.Data(:,2), out.simout.Data(:,3),'--','Color',sstblue);
+plot3(out.quadout.Data(:,1), out.quadout.Data(:,2), out.quadout.Data(:,3),'--','Color',sstblue);
 
 grid on;
   

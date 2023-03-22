@@ -47,11 +47,46 @@ if display == 1 %straight
     
 
      grid on;
-
+    axis equal;
+    axis([-100 100 -100 100 -100 100]);
+  
     xlabel('x [m]');
     ylabel('y [m]');
     zlabel('z [m]');
 
+    
+    
+    
+    
+    
+    
+    
+    figB = axis;
+    nsteps = 10;
+    steps = [(figB(2)-figB(1))/(nsteps-1);(figB(4)-figB(3))/(nsteps-1);(figB(6)-figB(5))/(nsteps-1)];
+    [X,Y,Z] = meshgrid(figB(1):steps(1):figB(2),figB(3):steps(2):figB(4),figB(5):steps(3):figB(6));
+    P = [   reshape(X,1,[])
+            reshape(Y,1,[])
+            reshape(Z,1,[]) ];
+    Vraw = straight_line_vector_field(P,ParamFixLine);
+    U = reshape(Vraw(1,:),nsteps,nsteps,nsteps);
+    V = reshape(Vraw(2,:),nsteps,nsteps,nsteps);
+    W = reshape(Vraw(3,:),nsteps,nsteps,nsteps)*0;
+    %quiver3(X,Y,Z,U,V,W);
+    idx_plane = (Z==0);
+    XX = X(idx_plane);
+    YY = Y(idx_plane);
+    UU = U(idx_plane);
+    VV = V(idx_plane);
+    %quiver(X,Y,U,V);
+   
+    
+    
+    
+    
+    
+    
+    
      hold off;
 
 % 
@@ -61,34 +96,34 @@ if display == 1 %straight
 %      legend('x','y','z');
 %      plot(out.fixlineout.Time, out.fixlineout.Data(:,1:3));
 %      legend('x','y','z','x1','y2','z3');
+% %      hold off;
+%      
+%       figure(3);
+%       
+%      plot(t,r(1,:));
+%      title('north');
+%      hold on;
+%      legend('x','x1');
+%      plot(out.fixlineout.Time, out.fixlineout.Data(:,1));
 %      hold off;
-     
-      figure(3);
-      
-     plot(t,r(1,:));
-     title('north');
-     hold on;
-     legend('x','x1');
-     plot(out.fixlineout.Time, out.fixlineout.Data(:,1));
-     hold off;
-
-      figure(4);
-      
-     plot(t,r(2,:));
-     title('east');
-     hold on;
-     legend('y','y1');
-     plot(out.fixlineout.Time, out.fixlineout.Data(:,2));
-     hold off;
-
-      figure(5);
-      
-     plot(t,r(3,:));
-     title('down');
-     hold on;
-     legend('z','z1');
-     plot(out.fixlineout.Time, out.fixlineout.Data(:,3));
-     hold off;
+% 
+%       figure(4);
+%       
+%      plot(t,r(2,:));
+%      title('east');
+%      hold on;
+%      legend('y','y1');
+%      plot(out.fixlineout.Time, out.fixlineout.Data(:,2));
+%      hold off;
+% 
+%       figure(5);
+%       
+%      plot(t,r(3,:));
+%      title('down');
+%      hold on;
+%      legend('z','z1');
+%      plot(out.fixlineout.Time, out.fixlineout.Data(:,3));
+%      hold off;
 
 
 
@@ -107,7 +142,7 @@ else %orbit
 
 
     t = out.fixorbout.Time';
-
+    
     r = [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
 
     plot3(r(1,:), r(2,:), r(3,:), '--'); 
@@ -133,6 +168,46 @@ else %orbit
     ylabel('y [m]');
     zlabel('z [m]');
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    figB = axis;
+    nsteps = 10;
+    steps = [(figB(2)-figB(1))/(nsteps-1);(figB(4)-figB(3))/(nsteps-1);(figB(6)-figB(5))/(nsteps-1)];
+    [X,Y,Z] = meshgrid(figB(1):steps(1):figB(2),figB(3):steps(2):figB(4),figB(5):steps(3):figB(6));
+    P = [   reshape(X,1,[])
+            reshape(Y,1,[])
+            reshape(Z,1,[]) ];
+    Vraw = orbit_vector_field(P,ParamFixOrb);
+    U = reshape(Vraw(1,:),nsteps,nsteps,nsteps);
+    V = reshape(Vraw(2,:),nsteps,nsteps,nsteps);
+    W = reshape(Vraw(3,:),nsteps,nsteps,nsteps)*0;
+    quiver3(X,Y,Z,U,V,W);
+    idx_plane = (Z==0);
+    XX = X(idx_plane);
+    YY = Y(idx_plane);
+    UU = U(idx_plane);
+    VV = V(idx_plane);
+    %quiver(X,Y,U,V);
+   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
      hold off;
      
      
@@ -141,32 +216,32 @@ else %orbit
      
      
      
-      figure(3);
-      
-     plot(t,r(1,:));
-     title('north');
-     hold on;
-     legend('x','x1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,1));
-     hold off;
-
-      figure(4);
-      
-     plot(t,r(2,:));
-     title('east');
-     hold on;
-     legend('y','y1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,2));
-     hold off;
-
-      figure(5);
-      
-     plot(t,-r(3,:));  %rever referenciais
-     title('down');
-     hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,3));
-     hold off;
+%       figure(3);
+%       
+%      plot(t,r(1,:));
+%      title('north');
+%      hold on;
+%      legend('x','x1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,1));
+%      hold off;
+% 
+%       figure(4);
+%       
+%      plot(t,r(2,:));
+%      title('east');
+%      hold on;
+%      legend('y','y1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,2));
+%      hold off;
+% 
+%       figure(5);
+%       
+%      plot(t,-r(3,:));  %rever referenciais
+%      title('down');
+%      hold on;
+%      legend('z','z1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,3));
+%      hold off;
      
      
 end

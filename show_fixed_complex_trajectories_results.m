@@ -19,30 +19,42 @@ if display == 0 %straight
     
 
 
-    psi_l = ParamFixLine.psi_l;  
-    gamma_l = ParamFixLine.gamma_l;
-    cl = ParamFixLine.c0;
-    ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
+%     psi_l = ParamFixComplex.psi_l1;  
+%     gamma_l = ParamFixComplex.gamma_l1;
+%     cl = ParamFixComplex.c0_l1;
+%     ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
+% 
+% 
+% 
+%     figure(1);
+% 
+%      t = out.fixcomplexout.Time';
+% 
+%      r =cl+ ql*t;
+% 
+%   
+%      plot3( r(1,:), r(2,:),  r(3,:), '.');
+% 
+%      hold on;
+%      
+%       psi_l = ParamFixComplex.psi_l2;  
+%     gamma_l = ParamFixComplex.gamma_l2;
+%     cl = ParamFixComplex.c0_l2;
+%     ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
+%     
+%     r =cl+ ql*t;
+% 
+%   
+%      plot3( r(1,:), r(2,:),  r(3,:), '.');
 
-
-
-    figure(1);
-
-     t = out.fixorbout.Time';
-
-     r =cl+ ql*t;
-
-  
-     plot3( r(1,:), r(2,:),  r(3,:), '.');
-
-     hold on;
-    plot3(out.fixlineout.Data(:,1), out.fixlineout.Data(:,2), out.fixlineout.Data(:,3));
+     
+    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3));
+    hold on; 
+   % plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
+   % plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
     
-    plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
-    plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
-    
-    plot3(out.fixlineout.Data(1,1), out.fixlineout.Data(1,2), out.fixlineout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
-    plot3(out.fixlineout.Data(end,1), out.fixlineout.Data(end,2), out.fixlineout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
+    plot3(out.fixcomplexout.Data(1,1), out.fixcomplexout.Data(1,2), out.fixcomplexout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
+    plot3(out.fixcomplexout.Data(end,1), out.fixcomplexout.Data(end,2), out.fixcomplexout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
 
     
 
@@ -54,40 +66,39 @@ if display == 0 %straight
     ylabel('y [m]');
     zlabel('z [m]');
 
-    
-    
-    
-    
-    
-    
-    
-    figB = axis;
-    nsteps = 10;
-    steps = [(figB(2)-figB(1))/(nsteps-1);(figB(4)-figB(3))/(nsteps-1);(figB(6)-figB(5))/(nsteps-1)];
-    [X,Y,Z] = meshgrid(figB(1):steps(1):figB(2),figB(3):steps(2):figB(4),figB(5):steps(3):figB(6));
-    P = [   reshape(X,1,[])
-            reshape(Y,1,[])
-            reshape(Z,1,[]) ];
-    Vraw = straight_line_vector_field(P,ParamFixLine);
-    U = reshape(Vraw(1,:),nsteps,nsteps,nsteps);
-    V = reshape(Vraw(2,:),nsteps,nsteps,nsteps);
-    W = reshape(Vraw(3,:),nsteps,nsteps,nsteps)*0;
-    %quiver3(X,Y,Z,U,V,W);
-    idx_plane = (Z==0);
-    XX = X(idx_plane);
-    YY = Y(idx_plane);
-    UU = U(idx_plane);
-    VV = V(idx_plane);
-    %quiver(X,Y,U,V);
    
     
+    hold off;
     
-    
-    
-    
-    
-    
-     hold off;
+%     
+%     
+%     figB = axis;
+%     nsteps = 10;
+%     steps = [(figB(2)-figB(1))/(nsteps-1);(figB(4)-figB(3))/(nsteps-1);(figB(6)-figB(5))/(nsteps-1)];
+%     [X,Y,Z] = meshgrid(figB(1):steps(1):figB(2),figB(3):steps(2):figB(4),figB(5):steps(3):figB(6));
+%     P = [   reshape(X,1,[])
+%             reshape(Y,1,[])
+%             reshape(Z,1,[]) ];
+%     Vraw = straight_line_vector_field(P,ParamFixLine);
+%     U = reshape(Vraw(1,:),nsteps,nsteps,nsteps);
+%     V = reshape(Vraw(2,:),nsteps,nsteps,nsteps);
+%     W = reshape(Vraw(3,:),nsteps,nsteps,nsteps)*0;
+%     %quiver3(X,Y,Z,U,V,W);
+%     idx_plane = (Z==0);
+%     XX = X(idx_plane);
+%     YY = Y(idx_plane);
+%     UU = U(idx_plane);
+%     VV = V(idx_plane);
+%     %quiver(X,Y,U,V);
+%    
+%     
+%     
+%     
+%     
+%     
+%     
+%     
+%      hold off;
 
 % 
 %      figure(2);

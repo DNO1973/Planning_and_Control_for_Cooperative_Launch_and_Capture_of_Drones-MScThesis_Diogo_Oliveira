@@ -26,16 +26,16 @@ r_d = p(3,:);
  
 %r0 = ch + [Rh*cos(psi_h) ; Rh*sin(psi_h) ; 0];
 
-dalpha_cyl = ( [ 2*(r_n - c_n)/Rh ; 2*(r_e - c_e)/Rh ; 0 ] )';
+dalpha_cyl = ( [ 2*(r_n - c_n)/Rh ; 2*(r_e - c_e)/Rh ; zeros(1,1000) ] );
 
-dalpha_pl = transpose( [ (tan(gamma_h)/lambda)*(-(r_e - c_e))/( (r_n - c_n)^2 + (r_e - c_e)^2 ) ; (tan(gamma_h)/lambda)*(r_n - c_e)/( (r_n - c_n)^2 + (r_e - c_e)^2 )  ; 1/Rh ] );
+dalpha_pl = ( [ (tan(gamma_h)/lambda)*(-(r_e - c_e))./( (r_n - c_n).^2 + (r_e - c_e).^2 ) ; (tan(gamma_h)/lambda)*(r_n - c_n)./( (r_n - c_n).^2 + (r_e - c_e).^2 )  ; 1/Rh*ones(1,1000) ] );
 
 
-alpha_cyl = ( (r_n - c_n)/Rh )^2 + ( (r_e - c_e)/Rh )^2 -1;
+alpha_cyl = ( (r_n - c_n)/Rh ).^2 + ( (r_e - c_e)/Rh ).^2 -1;
 
-alpha_pl = ( (r_d - c_d)/Rh )^2 + (tan(gamma_h)/lambda)*(atan( (r_e - c_e)/(r_n - c_n) ) - psi_h);
+alpha_pl = ( (r_d - c_d)/Rh ).^2 + (tan(gamma_h)/lambda)*(atan( (r_e - c_e)./(r_n - c_n) ) - psi_h);
 
-u_line = k1*(alpha_cyl*dalpha_cyl + alpha_pl*dalpha_pl) + lambda*k2*( (2/Rh)*transpose([ (r_e - c_e)/Rh ; -(r_n - c_n)/Rh ; lambda*tan(gamma_h) ]) );
+u_line = k1*(-alpha_cyl.*dalpha_cyl + alpha_pl.*dalpha_pl) + lambda*k2*( (2/Rh)*([ (r_e - c_e)/Rh ; -(r_n - c_n)/Rh ; lambda*tan(gamma_h)*ones(1,1000) ]) );
 
 %u =  V*(u_line/norm(u_line));
 u = ParamFixOrb.V*(u_line./vecnorm(u_line))  ;

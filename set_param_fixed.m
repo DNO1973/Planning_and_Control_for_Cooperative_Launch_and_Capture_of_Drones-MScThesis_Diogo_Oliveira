@@ -1,5 +1,5 @@
 % initial conditions straight line
-p0_line = [10;0;0];
+p0_line = [0;0;0];
 psi0_line = pi/2 ;
 
 gamma_limit_line = pi/6;
@@ -9,9 +9,9 @@ kphi_line = 10;
 V_line = 9;
 
 %reference straight line
-c0_line = [0;0;0];
-psi_l_line =pi/2;  %desired heading angle
-gamma_l_line = 0.3; %desired flight path angle
+c0_line = [0;30;0];
+psi_l_line =0;  %desired heading angle
+gamma_l_line = 0; %desired flight path angle
 
 
 % put parameters into structure
@@ -35,11 +35,11 @@ ParamFixLine.gamma_l = gamma_l_line;
 
  Rh_orb = 30;
  lambda_orb = 1;
- gamma_h_orb = 0; %15*pi/180;
+ gamma_h_orb = 15*pi/180;
  psi_h_orb = pi/2;
  
 k1_orb = 1;
-k2_orb = 1;
+k2_orb = 10;
  
 %center of helix
 ch_orb = [0; 0; 0];

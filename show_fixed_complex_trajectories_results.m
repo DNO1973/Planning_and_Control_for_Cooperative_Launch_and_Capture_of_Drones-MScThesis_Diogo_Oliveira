@@ -11,9 +11,9 @@ sstlightgray    = [200,200,200]/255;
 
 
 
-display =0; % 0 - straight line , 1 - orbit
+display =0; %
 
-
+%o display das referencias ainda nao esta a funcionar muito bem
 
 if display == 0 %straight
     
@@ -47,7 +47,59 @@ if display == 0 %straight
 %   
 %      plot3( r(1,:), r(2,:),  r(3,:), '.');
 
-     
+
+    
+number_of_segments = size(ParamFixComplex.paths);
+number_of_segments = number_of_segments(2);
+
+ figure(1);
+ t = out.fixcomplexout.Time';
+
+    for segment = 1:number_of_segments
+        
+        if ParamFixComplex.paths(segment) == 0
+            
+             psi_l = ParamFixComplex.psi_l(segment); 
+            gamma_l = ParamFixComplex.gamma_l(segment);
+            c_n = ParamFixComplex.c0(1,segment);    
+             c_e = ParamFixComplex.c0(2,segment);
+             c_d = ParamFixComplex.c0(3,segment);
+            cl = [c_n ; c_e; c_d];
+            ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
+        
+        
+        
+             r =cl+ ql*t;
+        
+          
+             plot3( r(1,:), r(2,:),  r(3,:), '-','Color',sstgray);
+        
+             hold on;
+            
+        else   
+             Rh = ParamFixComplex.Rh(segment);
+             lambda = ParamFixComplex.lambda(segment);
+             gamma_h = ParamFixComplex.gamma_h(segment);
+             psi_h = ParamFixComplex.psi_h(segment);
+
+            c_n = ParamFixComplex.c0(1,segment);   
+            c_e = ParamFixComplex.c0(2,segment);
+            c_d = ParamFixComplex.c0(3,segment);
+              ch = [c_n ; c_e; c_d];
+            
+
+       
+
+            r = [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
+
+            %plot3(r(1,:), r(2,:), r(3,:), '-','Color',sstgray); 
+
+            hold on;
+            
+        end
+    end
+
+
     plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3));
     hold on; 
    % plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
@@ -60,7 +112,7 @@ if display == 0 %straight
 
      grid on;
     axis equal;
-    axis([-100 100 -100 100 -100 100]);
+    axis([-50 500 -50 100 -50 500]);
   
     xlabel('x [m]');
     ylabel('y [m]');

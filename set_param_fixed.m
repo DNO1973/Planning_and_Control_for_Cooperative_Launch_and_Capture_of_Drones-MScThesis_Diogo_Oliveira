@@ -1,6 +1,6 @@
 % initial conditions straight line
 p0_line = [0;0;0];
-psi0_line = pi/2 ;
+psi0_line = 0 ;
 
 gamma_limit_line = pi/6;
 phi_limit_line = pi/6;
@@ -9,7 +9,7 @@ kphi_line = 10;
 V_line = 9;
 
 %reference straight line
-c0_line = [0;30;0];
+c0_line = [50;20;20];
 psi_l_line =0;  %desired heading angle
 gamma_l_line = 0; %desired flight path angle
 
@@ -33,10 +33,10 @@ ParamFixLine.gamma_l = gamma_l_line;
 
 % initial conditions orbit
 
- Rh_orb = 30;
- lambda_orb = 1;
- gamma_h_orb = 15*pi/180;
- psi_h_orb = pi/2;
+ Rh_orb = 50;
+ lambda_orb = -1;
+ gamma_h_orb = 0.1;% 15*pi/180;
+ psi_h_orb = 0;
  
 k1_orb = 1;
 k2_orb = 10;
@@ -45,7 +45,7 @@ k2_orb = 10;
 ch_orb = [0; 0; 0];
 
 p0_orb = [0.1;0;0];                                                         %start position on center of helix
-%p0_orb = ch_orb + [Rh_orb*cos(psi_h_orb) ; Rh_orb*sin(psi_h_orb) ; 0];     %start position on helix
+p0_orb = ch_orb + [Rh_orb*cos(psi_h_orb) ; Rh_orb*sin(psi_h_orb) ; 0];     %start position on helix
 psi0_orb = pi/2;
 
 gamma_limit_orb = pi/3;

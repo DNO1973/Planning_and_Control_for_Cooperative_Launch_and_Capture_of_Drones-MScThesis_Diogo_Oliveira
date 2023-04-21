@@ -145,16 +145,17 @@ else %orbit
     
     r = [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
 
-    plot3(r(1,:), r(2,:), r(3,:), '--'); 
+   % plot3(r(1,:), r(2,:), r(3,:), '--'); 
 
-    hold on;
+   % hold on;
     
     
     
-    plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
-    plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
+   % plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
+   % plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
     
     plot3(out.fixorbout.Data(1,1), out.fixorbout.Data(1,2), out.fixorbout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
+    hold on;
     plot3(out.fixorbout.Data(end,1), out.fixorbout.Data(end,2), out.fixorbout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
 
     
@@ -194,7 +195,7 @@ else %orbit
     YY = Y(idx_plane);
     UU = U(idx_plane);
     VV = V(idx_plane);
-    quiver(X,Y,U,V);
+   % quiver(X,Y,U,V);
    
     
     
@@ -213,66 +214,66 @@ else %orbit
      
      
      
-     
-     
-     
-      figure(3);
-      
-     plot(t,r(1,:));
-     title('north');
-     hold on;
-     legend('x','x1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,1));
-     hold off;
-
-      figure(4);
-      
-     plot(t,r(2,:));
-     title('east');
-     hold on;
-     legend('y','y1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,2));
-     hold off;
-
-      figure(5);
-      
-     plot(t,-r(3,:));  %rever referenciais
-     title('down');
-     hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,3));
-     hold off;
-     
-     
-      figure(6);
-      
-     %plot(t,-r(3,:));  %rever referenciais
-     title('psi');
-     %hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,4));
-     hold on;
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,7));
-     hold off;
-     
-     
-      figure(7);
-      
-     %plot(t,-r(3,:));  %rever referenciais
-     title('gamma');
-     %hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,5));
-     hold off;
-     
-      figure(8);
-      
-     %plot(t,-r(3,:));  %rever referenciais
-     title('phi');
-     %hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,6));
-     hold off;
+%      
+%      
+%      
+%       figure(3);
+%       
+%      plot(t,r(1,:));
+%      title('north');
+%      hold on;
+%      legend('x','x1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,1));
+%      hold off;
+% 
+%       figure(4);
+%       
+%      plot(t,r(2,:));
+%      title('east');
+%      hold on;
+%      legend('y','y1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,2));
+%      hold off;
+% 
+%       figure(5);
+%       
+%      plot(t,-r(3,:));  %rever referenciais
+%      title('down');
+%      hold on;
+%      legend('z','z1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,3));
+%      hold off;
+%      
+%      
+%       figure(6);
+%       
+%      %plot(t,-r(3,:));  %rever referenciais
+%      title('psi');
+%      %hold on;
+%      legend('z','z1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,4));
+%      hold on;
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,7));
+%      hold off;
+%      
+%      
+%       figure(7);
+%       
+%      %plot(t,-r(3,:));  %rever referenciais
+%      title('gamma');
+%      %hold on;
+%      legend('z','z1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,5));
+%      hold off;
+%      
+%       figure(8);
+%       
+%      %plot(t,-r(3,:));  %rever referenciais
+%      title('phi');
+%      %hold on;
+%      legend('z','z1');
+%      plot(out.fixorbout.Time, out.fixorbout.Data(:,6));
+%      hold off;
 end
 
  

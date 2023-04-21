@@ -1,143 +1,240 @@
 
-%**Paths with two straight trajectories**%
+clear
 
-% initial uav conditions straight line
+% initial uav conditions 
 p0_line = [0;0;0];
-psi0_line = pi/2 ;
+psi0_line = 0 ;
 
 gamma_limit_line = pi/6;
 phi_limit_line = pi/6;
-kphi_line = 10;
+kphi = 1;
+
+k1_line = 1;
+k2_line = 10;
+k1_orb = 1;
+k2_orb = 10;
 
 V_line = 9;
 
+%escolher o path
+path = 0; %0 - quadrado, 1 - dubins , 2 - oito
+
+
+%definicao dos paths a seguir hardcoded, definir cada um deles e ter
+%atencao se a trajetoria faz sentido, adicionar aos vetores do ParamFixComplex
+
+if(path == 0)
+    %reference straight line 1
+    c0_line1 = [0;0;0];
+    psi_l_line1 =0;  %desired heading angle
+    gamma_l_line1 = 0; %desired flight path angle
+
+
+    %reference straight line 2
+    c0_line2 = [250;0;0];
+    psi_l_line2 =pi/2;  %desired heading angle
+    gamma_l_line2 = 0; %desired flight path angle
+
+    %reference straight line 3
+    c0_line3 = [250;250;0];
+    psi_l_line3 = pi;  %desired heading angle
+    gamma_l_line3 = 0; %desired flight path angle
+
+
+     %reference straight line 4
+    c0_line4 = [0;250;0];
+    psi_l_line4 = 3*pi/2;  %desired heading angle
+    gamma_l_line4 = 0; %desired flight path angle
+
+
+
+    % put parameters into structure
+
+    %uav conditions
+    ParamFixComplex.p0 = p0_line;
+    ParamFixComplex.psi0 = psi0_line;
+
+    ParamFixComplex.gamma_limit = gamma_limit_line;
+    ParamFixComplex.phi_limit = phi_limit_line;
+    ParamFixComplex.kphi = kphi;
+
+    ParamFixComplex.k1_line = k1_line;
+    ParamFixComplex.k2_line = k2_line;
+    ParamFixComplex.k1_orb = k1_orb;
+    ParamFixComplex.k2_orb = k2_orb;
+
+    ParamFixComplex.V = V_line;
+    %number of path segments
+    ParamFixComplex.paths = [0, 0, 0, 0]; %0 - straight, 1 - orbit
 
 
 
 
-%reference straight line 1
-c0_line1 = [0;0;0];
-psi_l_line1 =pi/2;  %desired heading angle
-gamma_l_line1 = 0; %desired flight path angle
+    %path reference params
+
+    ParamFixComplex.c0 = [c0_line1, c0_line2, c0_line3, c0_line4];
+
+    %straight reference arrays
+
+    ParamFixComplex.psi_l = [psi_l_line1, psi_l_line2, psi_l_line3, psi_l_line4];
+    ParamFixComplex.gamma_l = [gamma_l_line1, gamma_l_line2, gamma_l_line3, gamma_l_line4];
 
 
-%reference straight line 2
-c0_line2 = [0;30;0];
-psi_l_line2 =pi/2;  %desired heading angle
-gamma_l_line2 = 0; %desired flight path angle
-
-%reference straight line 3
-c0_line3 = [0;700;0];
-psi_l_line3 = pi/2;  %desired heading angle
-gamma_l_line3 = 0; %desired flight path angle
+    %orbit reference arrays
 
 
+    ParamFixComplex.Rh = [0,0,0,0];
+    ParamFixComplex.lambda = [0,0,0,0];
+    ParamFixComplex.gamma_h = [0,0,0,0];
+    ParamFixComplex.psi_h = [0,0,0,0];
 
 
-% %reference straight line 2
-% c0_line2 = [0;30;0];
-% psi_l_line2 =0;  %desired heading angle
-% gamma_l_line2 = 0; %desired flight path angle
-% 
-% %reference straight line 3
-% c0_line3 = [30;30;0];
-% psi_l_line3 = -pi/2;  %desired heading angle
-% gamma_l_line3 = 0; %desired flight path angle
+end
 
 
 
+if(path == 1)
+     %dubins path
+
+    %segment line 1
+    c0_line1 = [50;20;20];
+    psi_l_line1 = 0;  %desired heading angle
+    gamma_l_line1 = 0; %desired flight path angle
 
 
-% put parameters into structure
+    %segment orb 2
 
-%uav conditions
-ParamFixComplex.p0 = p0_line;
-ParamFixComplex.psi0 = psi0_line;
+     Rh_orb2 = 100;
+     lambda_orb2 = -1;
+     gamma_h_orb2 = 0;
+     psi_h_orb2 = 3*pi/2;
+     ch_orb2 = [250; 120; 20];
 
-ParamFixComplex.gamma_limit = gamma_limit_line;
-ParamFixComplex.phi_limit = phi_limit_line;
-ParamFixComplex.kphi = kphi_line;
-
-ParamFixComplex.V = V_line;
-
-
-
+     %segment line 3
+    c0_line3 = [250;220;20];
+    psi_l_line3 = pi;  %desired heading angle
+    gamma_l_line3 = 0; %desired flight path angle
 
 
-ParamFixComplex.c0_l = [c0_line1, c0_line2, c0_line3];
-ParamFixComplex.psi_l = [psi_l_line1, psi_l_line2, psi_l_line3];
-ParamFixComplex.gamma_l = [gamma_l_line1, gamma_l_line2, gamma_l_line3];
+    %segment orb 4
 
-% %line one
-% ParamFixComplex.c0_l1 = c0_line1;
-% ParamFixComplex.psi_l1 = psi_l_line1;
-% ParamFixComplex.gamma_l1 = gamma_l_line1;
-% 
-% 
-% 
-% %line two
-% ParamFixComplex.c0_l2 = c0_line2;
-% ParamFixComplex.psi_l2 = psi_l_line2;
-% ParamFixComplex.gamma_l2 = gamma_l_line2;
+     Rh_orb4 = 100;
+     lambda_orb4 = -1;
+     gamma_h_orb4 = 0;
+     psi_h_orb4 = pi/2;
+     ch_orb4 = [50; 220; 20];
 
 
 
 
 
+    % put parameters into structure
+
+    %uav conditions
+    ParamFixComplex.p0 = p0_line;
+    ParamFixComplex.psi0 = psi0_line;
+
+    ParamFixComplex.gamma_limit = gamma_limit_line;
+    ParamFixComplex.phi_limit = phi_limit_line;
+    ParamFixComplex.kphi = kphi;
+
+    ParamFixComplex.k1_line = k1_line;
+    ParamFixComplex.k2_line = k2_line;
+    ParamFixComplex.k1_orb = k1_orb;
+    ParamFixComplex.k2_orb = k2_orb;
+
+    ParamFixComplex.V = V_line;
+
+    ParamFixComplex.paths = [0, 1, 0, 1]; %0 - straight, 1 - orbit
 
 
 
 
+    %path reference params
+
+    ParamFixComplex.c0 = [c0_line1, ch_orb2, c0_line3, ch_orb4];
+
+    %straight reference arrays
+
+    ParamFixComplex.psi_l = [psi_l_line1, 0, psi_l_line3, 0];
+    ParamFixComplex.gamma_l = [gamma_l_line1, 0, gamma_l_line3, 0];
+
+
+    %orbit reference arrays
+
+
+    ParamFixComplex.Rh = [0,Rh_orb2,0,Rh_orb4];
+    ParamFixComplex.lambda = [0,lambda_orb2,0,lambda_orb4];
+    ParamFixComplex.gamma_h = [0,gamma_h_orb2,0,gamma_h_orb4];
+    ParamFixComplex.psi_h = [0,psi_h_orb2,0,psi_h_orb4];
+
+end
+
+if(path == 2)
+
+psi0_line = 3*pi/2 ;
+    %segment orb 1
+
+     Rh_orb1 = 50;
+     lambda_orb1 = -1;
+     gamma_h_orb1 = 0;
+     psi_h_orb1 = 3*pi/2;
+     ch_orb1 = [45; 0; 0];
+
+    %segment orb 2
+
+     Rh_orb2 = 50;
+     lambda_orb2 = 1;
+     gamma_h_orb2 = 0;
+     psi_h_orb2 = 3*pi/2;
+     ch_orb2 = [45; 95; 0];
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% initial conditions orbit
-% 
-%  Rh_orb = 30;
-%  lambda_orb = 1;
-%  gamma_h_orb = 15*pi/180;
-%  psi_h_orb = pi/2;
-%  
-% k1_orb = 1;
-% k2_orb = 10;
-%  
-% %center of helix
-% ch_orb = [0; 0; 0];
-% 
-% p0_orb = [0.1;0;0];                                                         %start position on center of helix
-% %p0_orb = ch_orb + [Rh_orb*cos(psi_h_orb) ; Rh_orb*sin(psi_h_orb) ; 0];     %start position on helix
-% psi0_orb = pi/2;
-% 
-% gamma_limit_orb = pi/3;
-% phi_limit_orb = pi/3;
-% kphi_orb = 1;
-% 
-% V_orb = 9;
-% %reference orbit
-% 
-% 
-% 
-% % put parameters into structure
-% 
-% ParamFixOrb.p0 = p0_orb;
-% ParamFixOrb.psi0 = psi0_orb;
-% ParamFixOrb.ch = ch_orb;
-% 
-% ParamFixOrb.gamma_limit = gamma_limit_orb;
-% ParamFixOrb.phi_limit = phi_limit_orb;
-% ParamFixOrb.kphi = kphi_orb;
-% 
-% ParamFixOrb.V = V_orb;
-% 
-% ParamFixOrb.Rh = Rh_orb;
-% ParamFixOrb.lambda = lambda_orb;
-% ParamFixOrb.gamma_h = gamma_h_orb;
-% ParamFixOrb.psi_h = psi_h_orb;
-% ParamFixOrb.k1 = k1_orb;
-% ParamFixOrb.k2 = k2_orb;
-%  
+    % put parameters into structure
+
+    %uav conditions
+    ParamFixComplex.p0 = p0_line;
+    ParamFixComplex.psi0 = psi0_line;
+
+    ParamFixComplex.gamma_limit = gamma_limit_line;
+    ParamFixComplex.phi_limit = phi_limit_line;
+    ParamFixComplex.kphi = kphi;
+
+    ParamFixComplex.k1_line = k1_line;
+    ParamFixComplex.k2_line = k2_line;
+    ParamFixComplex.k1_orb = k1_orb;
+    ParamFixComplex.k2_orb = k2_orb;
+
+    ParamFixComplex.V = V_line;
+
+    ParamFixComplex.paths = [1, 1];
+
+
+
+
+    %path reference params
+
+    ParamFixComplex.c0 = [ch_orb1, ch_orb2];
+
+    %straight reference arrays
+
+    ParamFixComplex.psi_l = [0, 0, 0, 0];
+    ParamFixComplex.gamma_l = [0, 0, 0, 0];
+
+
+    %orbit reference arrays
+
+
+    ParamFixComplex.Rh = [Rh_orb1,Rh_orb2];
+    ParamFixComplex.lambda = [lambda_orb1,lambda_orb2];
+    ParamFixComplex.gamma_h = [gamma_h_orb1,gamma_h_orb2];
+    ParamFixComplex.psi_h = [psi_h_orb1,psi_h_orb2];
+
+end
+
+
 
 
 

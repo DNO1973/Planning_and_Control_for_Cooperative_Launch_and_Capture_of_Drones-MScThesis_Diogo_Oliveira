@@ -42,7 +42,7 @@ k1_orb = 1;
 k2_orb = 10;
  
 %center of helix
-ch_orb = [0; 0; 0];
+ch_orb = [10; 0; 0];
 
 p0_orb = [0.1;0;0];                                                         %start position on center of helix
 p0_orb = ch_orb + [Rh_orb*cos(psi_h_orb) ; Rh_orb*sin(psi_h_orb) ; 0];     %start position on helix

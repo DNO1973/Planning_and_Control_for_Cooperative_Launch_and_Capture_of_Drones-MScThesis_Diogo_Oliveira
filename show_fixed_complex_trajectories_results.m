@@ -11,11 +11,11 @@ sstlightgray    = [200,200,200]/255;
 
 
 
-display =0; %
+display =0; 
 
-%o display das referencias ainda nao esta a funcionar muito bem
 
-if display == 0 %straight
+
+if display == 0 
     
 
 
@@ -59,54 +59,125 @@ number_of_segments = number_of_segments(2);
         
         if ParamFixComplex.paths(segment) == 0
             
-             psi_l = ParamFixComplex.psi_l(segment); 
-            gamma_l = ParamFixComplex.gamma_l(segment);
-            c_n = ParamFixComplex.c0(1,segment);    
-             c_e = ParamFixComplex.c0(2,segment);
-             c_d = ParamFixComplex.c0(3,segment);
-            cl = [c_n ; c_e; c_d];
-            ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
-        
-        
-        
-             r =cl+ ql*t;
-        
-          
-             plot3( r(1,:), r(2,:),  r(3,:), '-','Color',sstgray);
-        
-             hold on;
             
-        else   
-             Rh = ParamFixComplex.Rh(segment);
-             lambda = ParamFixComplex.lambda(segment);
-             gamma_h = ParamFixComplex.gamma_h(segment);
-             psi_h = ParamFixComplex.psi_h(segment);
+            if ~(segment == number_of_segments)
+                psi_l = ParamFixComplex.psi_l(segment); 
+                gamma_l = ParamFixComplex.gamma_l(segment);
+                c_n = ParamFixComplex.c0(1,segment);    
+                 c_e = ParamFixComplex.c0(2,segment);
+                 c_d = ParamFixComplex.c0(3,segment);
+                 
+                 c_n2 = ParamFixComplex.c0(1,segment + 1);    
+                 c_e2 = ParamFixComplex.c0(2,segment + 1);
+                 c_d2 = ParamFixComplex.c0(3,segment + 1);
+                cl = [c_n ; c_e; c_d];
+                ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
 
-            c_n = ParamFixComplex.c0(1,segment);   
-            c_e = ParamFixComplex.c0(2,segment);
-            c_d = ParamFixComplex.c0(3,segment);
-              ch = [c_n ; c_e; c_d];
+                
+                 distance_to_next_path = sqrt((c_n - c_n2)^2 + (c_e - c_e2)^2 + (c_d - c_d2)^2);
+
+
+                 path_lenght = 1:distance_to_next_path;
+                 r =cl+ ql*path_lenght;
+                 % r =cl+ ql*1000;
+
+                 plot3( r(1,:), r(2,:),  r(3,:), '--','Color','r');
+
+                 hold on;
             
+            else
+                 psi_l = ParamFixComplex.psi_l(segment); 
+                gamma_l = ParamFixComplex.gamma_l(segment);
+                c_n = ParamFixComplex.c0(1,segment);    
+                 c_e = ParamFixComplex.c0(2,segment);
+                 c_d = ParamFixComplex.c0(3,segment);
+                cl = [c_n ; c_e; c_d];
+                ql = [cos(psi_l)*cos(gamma_l) ; sin(psi_l)*cos(gamma_l) ; -sin(gamma_l) ];
 
-       
 
-            r = [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
 
-            %plot3(r(1,:), r(2,:), r(3,:), '-','Color',sstgray); 
+                 %r =cl+ ql*t;
+                  path_lenght = 1:500;
+                  r =cl+ ql*path_lenght;
 
-            hold on;
+                 plot3( r(1,:), r(2,:),  r(3,:), '--','Color','r');
+
+                 hold on;
+             
+            end
             
+        else  
+            if ~(segment == number_of_segments)
+                Rh = ParamFixComplex.Rh(segment);
+                 lambda = ParamFixComplex.lambda(segment);
+                 gamma_h = ParamFixComplex.gamma_h(segment);
+                 psi_h = ParamFixComplex.psi_h(segment);
+
+                c_n = ParamFixComplex.c0(1,segment);   
+                c_e = ParamFixComplex.c0(2,segment);
+                c_d = ParamFixComplex.c0(3,segment);
+                 ch = [c_n ; c_e; c_d];
+                    
+                  c_n2 = ParamFixComplex.c0(1,segment + 1);    
+                 c_e2 = ParamFixComplex.c0(2,segment + 1);
+                 c_d2 = ParamFixComplex.c0(3,segment + 1);
+                  ch2 = [c_n2 ; c_e2; c_d2];
+                    
+                  
+                   path_lenght = 1:0.01:10;
+                 r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
+
+
+                plot3(r(1,:), r(2,:), r(3,:), '--','Color','r'); 
+
+                hold on;
+                  
+%                   path_lenght = 1:0.01:10;
+%                   r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
+%                   n = size(path_lenght,2);
+%                 
+%                  for point = 1:n
+%                      distance_to_next_path = sqrt((r(1,point) - c_n2)^2 + (r(2,point) - c_e2)^2 + (r(3,point) - c_d2)^2);
+%                      plot3(r(1,point), r(2,point), r(3,point), 'o','Color','r'); 
+% 
+%                         hold on;
+%                      if distance_to_next_path <= 1
+%                             break
+%                      end
+%                  end
+            else
+            
+            
+                 Rh = ParamFixComplex.Rh(segment);
+                 lambda = ParamFixComplex.lambda(segment);
+                 gamma_h = ParamFixComplex.gamma_h(segment);
+                 psi_h = ParamFixComplex.psi_h(segment);
+
+                c_n = ParamFixComplex.c0(1,segment);   
+                c_e = ParamFixComplex.c0(2,segment);
+                c_d = ParamFixComplex.c0(3,segment);
+                  ch = [c_n ; c_e; c_d];
+
+
+                  path_lenght = 1:0.01:10;
+                 r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
+
+
+                plot3(r(1,:), r(2,:), r(3,:), '--','Color','r'); 
+
+                hold on;
+            end
         end
     end
 
 
-    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3));
+    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3),'Color',sstblue);
     hold on; 
    % plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
    % plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
     
-    plot3(out.fixcomplexout.Data(1,1), out.fixcomplexout.Data(1,2), out.fixcomplexout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
-    plot3(out.fixcomplexout.Data(end,1), out.fixcomplexout.Data(end,2), out.fixcomplexout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
+    plot3(out.fixcomplexout.Data(1,1), out.fixcomplexout.Data(1,2), out.fixcomplexout.Data(1,3),'o','Color',sstblue,'MarkerSize',8);
+    plot3(out.fixcomplexout.Data(end,1), out.fixcomplexout.Data(end,2), out.fixcomplexout.Data(end,3),'x','Color',sstblue,'MarkerSize',8);
 
     
 

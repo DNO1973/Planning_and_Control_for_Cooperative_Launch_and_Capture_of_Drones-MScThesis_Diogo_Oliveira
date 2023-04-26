@@ -11,7 +11,7 @@ sstlightgray    = [200,200,200]/255;
 
 
 
-display =0; % 0 - straight line , 1 - orbit
+display =1; % 0 - straight line , 1 - orbit
 
 
 
@@ -143,11 +143,11 @@ else %orbit
 
     t = out.fixorbout.Time';
     
-    r = [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
+    r = ch+  [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
 
-   % plot3(r(1,:), r(2,:), r(3,:), '--'); 
+    plot3(r(1,:), r(2,:), r(3,:), '--'); 
 
-   % hold on;
+    hold on;
     
     
     

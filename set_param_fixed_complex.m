@@ -1,6 +1,9 @@
 
 clear
 
+
+Ts = 0.01;
+proximity_to_next_path = 10;
 % initial uav conditions 
 p0_line = [0;0;0];
 psi0_line = 0 ;
@@ -17,7 +20,7 @@ k2_orb = 10;
 V_line = 9;
 
 %escolher o path
-path = 0; %0 - quadrado, 1 - dubins , 2 - oito
+path = 2; %0 - quadrado, 1 - dubins , 2 - oito
 
 
 %definicao dos paths a seguir hardcoded, definir cada um deles e ter
@@ -49,7 +52,8 @@ if(path == 0)
 
 
     % put parameters into structure
-
+    ParamFixComplex.Ts = Ts;
+    ParamFixComplex.proximity_to_next_path = proximity_to_next_path;
     %uav conditions
     ParamFixComplex.p0 = p0_line;
     ParamFixComplex.psi0 = psi0_line;
@@ -108,10 +112,10 @@ if(path == 1)
      lambda_orb2 = -1;
      gamma_h_orb2 = 0;
      psi_h_orb2 = 3*pi/2;
-     ch_orb2 = [250; 120; 20];
+     ch_orb2 = [500; 120; 20];
 
      %segment line 3
-    c0_line3 = [250;220;20];
+    c0_line3 = [500;220;20];
     psi_l_line3 = pi;  %desired heading angle
     gamma_l_line3 = 0; %desired flight path angle
 
@@ -122,14 +126,19 @@ if(path == 1)
      lambda_orb4 = -1;
      gamma_h_orb4 = 0;
      psi_h_orb4 = pi/2;
-     ch_orb4 = [50; 220; 20];
+     ch_orb4 = [50; 120; 20];
 
 
+    %segment line 5
+    c0_line5 = [50;20;20];
+    psi_l_line5 = -pi/2;  %desired heading angle
+    gamma_l_line5 = 0; %desired flight path angle
 
 
 
     % put parameters into structure
-
+    ParamFixComplex.Ts = Ts;   
+    ParamFixComplex.proximity_to_next_path = proximity_to_next_path;
     %uav conditions
     ParamFixComplex.p0 = p0_line;
     ParamFixComplex.psi0 = psi0_line;
@@ -145,28 +154,28 @@ if(path == 1)
 
     ParamFixComplex.V = V_line;
 
-    ParamFixComplex.paths = [0, 1, 0, 1]; %0 - straight, 1 - orbit
+    ParamFixComplex.paths = [0, 1, 0, 1, 0]; %0 - straight, 1 - orbit
 
 
 
 
     %path reference params
 
-    ParamFixComplex.c0 = [c0_line1, ch_orb2, c0_line3, ch_orb4];
+    ParamFixComplex.c0 = [c0_line1, ch_orb2, c0_line3, ch_orb4, c0_line5];
 
     %straight reference arrays
 
-    ParamFixComplex.psi_l = [psi_l_line1, 0, psi_l_line3, 0];
-    ParamFixComplex.gamma_l = [gamma_l_line1, 0, gamma_l_line3, 0];
+    ParamFixComplex.psi_l = [psi_l_line1, 0, psi_l_line3, 0, psi_l_line5];
+    ParamFixComplex.gamma_l = [gamma_l_line1, 0, gamma_l_line3, 0, gamma_l_line5];
 
 
     %orbit reference arrays
 
 
-    ParamFixComplex.Rh = [0,Rh_orb2,0,Rh_orb4];
-    ParamFixComplex.lambda = [0,lambda_orb2,0,lambda_orb4];
-    ParamFixComplex.gamma_h = [0,gamma_h_orb2,0,gamma_h_orb4];
-    ParamFixComplex.psi_h = [0,psi_h_orb2,0,psi_h_orb4];
+    ParamFixComplex.Rh = [0,Rh_orb2,0,Rh_orb4,0];
+    ParamFixComplex.lambda = [0,lambda_orb2,0,lambda_orb4,0];
+    ParamFixComplex.gamma_h = [0,gamma_h_orb2,0,gamma_h_orb4,0];
+    ParamFixComplex.psi_h = [0,psi_h_orb2,0,psi_h_orb4,0];
 
 end
 
@@ -193,7 +202,8 @@ psi0_line = 3*pi/2 ;
 
 
     % put parameters into structure
-
+    ParamFixComplex.Ts = Ts;
+    ParamFixComplex.proximity_to_next_path = proximity_to_next_path;
     %uav conditions
     ParamFixComplex.p0 = p0_line;
     ParamFixComplex.psi0 = psi0_line;

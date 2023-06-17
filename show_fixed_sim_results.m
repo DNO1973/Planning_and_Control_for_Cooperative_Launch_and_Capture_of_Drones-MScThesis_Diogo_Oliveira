@@ -142,7 +142,7 @@ else %orbit
 
 
     t = out.fixorbout.Time';
-    
+   % t = 1:500;
     r = ch+  [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
 
     plot3(r(1,:), r(2,:), r(3,:), '--'); 
@@ -189,7 +189,7 @@ else %orbit
     U = reshape(Vraw(1,:),nsteps,nsteps,nsteps);
     V = reshape(Vraw(2,:),nsteps,nsteps,nsteps);
     W = reshape(Vraw(3,:),nsteps,nsteps,nsteps);
-    %quiver3(X,Y,Z,U,V,W);
+   % quiver3(X,Y,Z,U,V,W);
     idx_plane = (Z==0);
     XX = X(idx_plane);
     YY = Y(idx_plane);

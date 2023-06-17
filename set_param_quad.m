@@ -6,7 +6,7 @@ kp=10; kv=25;
 m = 4; %mass
 
 % initial conditions
-p0 = [0;0;0];
+p0 = [-50;25;-40];
 v0 = [0;0;0];
 
 % put parameters into structure

@@ -35,7 +35,7 @@ alpha_cyl = ( (r_n - c_n)/Rh ).^2 + ( (r_e - c_e)/Rh ).^2 -1;
 
 alpha_pl = ( (r_d - c_d)/Rh ).^2 + (tan(gamma_h)/lambda)*(atan( (r_e - c_e)./(r_n - c_n) ) - psi_h);
 
-u_line = k1*(-alpha_cyl.*dalpha_cyl + alpha_pl.*dalpha_pl) + lambda*k2*( (2/Rh)*([ (r_e - c_e)/Rh ; -(r_n - c_n)/Rh ; lambda*tan(gamma_h)*ones(1,1000) ]) );
+u_line = k1*(-alpha_cyl.*dalpha_cyl + alpha_pl.*dalpha_pl) - lambda*k2*( (2/Rh)*([ (r_e - c_e)/Rh ; -(r_n - c_n)/Rh ; lambda*tan(gamma_h)*ones(1,1000) ]) );
 
 %u =  V*(u_line/norm(u_line));
 u = ParamFixOrb.V*(u_line./vecnorm(u_line))  ;

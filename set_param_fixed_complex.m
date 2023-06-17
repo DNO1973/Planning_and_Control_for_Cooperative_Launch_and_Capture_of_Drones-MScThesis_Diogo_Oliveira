@@ -20,7 +20,7 @@ k2_orb = 10;
 V_line = 9;
 
 %escolher o path
-path = 2; %0 - quadrado, 1 - dubins , 2 - oito
+path = 1; %0 - quadrado, 1 - dubins , 2 - oito, 3 - duas orbits verticais
 
 
 %definicao dos paths a seguir hardcoded, definir cada um deles e ter
@@ -109,7 +109,7 @@ if(path == 1)
     %segment orb 2
 
      Rh_orb2 = 100;
-     lambda_orb2 = -1;
+     lambda_orb2 = 1;
      gamma_h_orb2 = 0;
      psi_h_orb2 = 3*pi/2;
      ch_orb2 = [500; 120; 20];
@@ -123,7 +123,7 @@ if(path == 1)
     %segment orb 4
 
      Rh_orb4 = 100;
-     lambda_orb4 = -1;
+     lambda_orb4 = 1;
      gamma_h_orb4 = 0;
      psi_h_orb4 = pi/2;
      ch_orb4 = [50; 120; 20];
@@ -185,7 +185,7 @@ psi0_line = 3*pi/2 ;
     %segment orb 1
 
      Rh_orb1 = 50;
-     lambda_orb1 = -1;
+     lambda_orb1 = 1;
      gamma_h_orb1 = 0;
      psi_h_orb1 = 3*pi/2;
      ch_orb1 = [45; 0; 0];
@@ -193,7 +193,7 @@ psi0_line = 3*pi/2 ;
     %segment orb 2
 
      Rh_orb2 = 50;
-     lambda_orb2 = 1;
+     lambda_orb2 = -1;
      gamma_h_orb2 = 0;
      psi_h_orb2 = 3*pi/2;
      ch_orb2 = [45; 95; 0];
@@ -245,6 +245,71 @@ psi0_line = 3*pi/2 ;
 end
 
 
+
+if(path == 3)
+
+psi0_line = 3*pi/2 ;
+    %segment orb 1
+
+     Rh_orb1 = 50;
+     lambda_orb1 = -1;
+     gamma_h_orb1 = -0.1;
+     psi_h_orb1 = 3*pi/2;
+     ch_orb1 = [10; 0; 0];
+
+    %segment orb 2
+
+     Rh_orb2 = 50;
+     lambda_orb2 = -1;
+     gamma_h_orb2 = 0.1;
+     psi_h_orb2 = 3*pi/2;
+     ch_orb2 = [0; 0; 150];
+
+
+
+
+    % put parameters into structure
+    ParamFixComplex.Ts = Ts;
+    ParamFixComplex.proximity_to_next_path = proximity_to_next_path;
+    %uav conditions
+    ParamFixComplex.p0 = p0_line;
+    ParamFixComplex.psi0 = psi0_line;
+
+    ParamFixComplex.gamma_limit = gamma_limit_line;
+    ParamFixComplex.phi_limit = phi_limit_line;
+    ParamFixComplex.kphi = kphi;
+
+    ParamFixComplex.k1_line = k1_line;
+    ParamFixComplex.k2_line = k2_line;
+    ParamFixComplex.k1_orb = k1_orb;
+    ParamFixComplex.k2_orb = k2_orb;
+
+    ParamFixComplex.V = V_line;
+
+    ParamFixComplex.paths = [1, 1];
+
+
+
+
+    %path reference params
+
+    ParamFixComplex.c0 = [ch_orb1, ch_orb2];
+
+    %straight reference arrays
+
+    ParamFixComplex.psi_l = [0, 0, 0, 0];
+    ParamFixComplex.gamma_l = [0, 0, 0, 0];
+
+
+    %orbit reference arrays
+
+
+    ParamFixComplex.Rh = [Rh_orb1,Rh_orb2];
+    ParamFixComplex.lambda = [lambda_orb1,lambda_orb2];
+    ParamFixComplex.gamma_h = [gamma_h_orb1,gamma_h_orb2];
+    ParamFixComplex.psi_h = [psi_h_orb1,psi_h_orb2];
+
+end
 
 
 

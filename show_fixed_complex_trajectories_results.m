@@ -11,11 +11,7 @@ sstlightgray    = [200,200,200]/255;
 
 
 
-display =0; 
 
-
-
-if display == 0 
     
 
 
@@ -47,7 +43,7 @@ if display == 0
 %   
 %      plot3( r(1,:), r(2,:),  r(3,:), '.');
 
-
+auxPoint=1; %apagar isto depois de corrigir orbitais com gamma!=0 consecutivas
     
 number_of_segments = size(ParamFixComplex.paths);
 number_of_segments = number_of_segments(2);
@@ -124,13 +120,13 @@ number_of_segments = number_of_segments(2);
                   ch2 = [c_n2 ; c_e2; c_d2];
                     
                   
-                   path_lenght = 1:0.01:10;
-                 r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
-
-
-                plot3(r(1,:), r(2,:), r(3,:), '--','Color','r'); 
-
-                hold on;
+%                    path_lenght = 1:0.01:10;
+%                  r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
+% 
+% 
+%                 plot3(r(1,:), r(2,:), r(3,:), '--','Color','r'); 
+% 
+%                 hold on;
                   
 %                   path_lenght = 1:0.01:10;
 %                   r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
@@ -138,13 +134,53 @@ number_of_segments = number_of_segments(2);
 %                 
 %                  for point = 1:n
 %                      distance_to_next_path = sqrt((r(1,point) - c_n2)^2 + (r(2,point) - c_e2)^2 + (r(3,point) - c_d2)^2);
-%                      plot3(r(1,point), r(2,point), r(3,point), 'o','Color','r'); 
-% 
+%                      aux = 'r';
+%                     % plot3(r(1,point), r(2,point), r(3,point), 'o','Color',aux); 
+%                     
+%                      fprintf('distance %f  r %f %f %f  ch %d %d %d \n' , distance_to_next_path, r(1,point),r(2,point),r(3,point), c_n2, c_e2, c_d2);
 %                         hold on;
 %                      if distance_to_next_path <= 1
-%                             break
+%                            % plot3(r(1,point), r(2,point), r(3,point), 'o','Color',aux);
+%                            auxPoint = point;
+%                             break;
+%    
 %                      end
+%                     % plot3(r(1,point), r(2,point), r(3,point), 'o','Color',aux);
+%                      
 %                  end
+%                  
+%                 
+%                  disp(auxPoint);
+%                  for point = 1:n
+%                      if point >= auxPoint
+%                          r(1,point) = 0;
+%                         r(2,point) = 0;
+%                         r(3,point) = 0;
+%                      end
+%                      
+%                  end
+%                   plot3(r(1,:), r(2,:), r(3,:), '--','Color','r');
+                 
+
+                path_lenght = 1:0.01:10;
+                  r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
+                  n = size(path_lenght,2);
+                
+                 for point = 1:n
+                     distance_to_next_path = sqrt((r(1,point) - c_n2)^2 + (r(2,point) - c_e2)^2 + (r(3,point) - c_d2)^2);
+                    if distance_to_next_path <= 1
+                       auxPoint = point;
+                            break;
+                     end                     
+                 end
+                 
+                 rf = r(:,1:auxPoint);
+                   
+                  plot3(rf(1,:), rf(2,:), rf(3,:), '--','Color','r');
+                    hold on;
+                  %plot3(rf(1,1), rf(2,1), rf(3,1),'o','Color',sstgreen,'MarkerSize',10);
+                 % plot3(rf(1,end), rf(2,end), rf(3,end),'x','Color',sstgray,'MarkerSize',10);
+                 
             else
             
             
@@ -263,150 +299,5 @@ number_of_segments = number_of_segments(2);
 
 
 
-
-
-else %orbit
-    
-    
-    Rh = ParamFixOrb.Rh;
-    lambda = ParamFixOrb.lambda;
-     gamma_h = ParamFixOrb.gamma_h;
-     psi_h = ParamFixOrb.psi_h;
-     ch = ParamFixOrb.ch;
-
-
-    t = out.fixorbout.Time';
-    
-    r = [Rh*cos(lambda*t + psi_h) ; Rh*sin(lambda*t + psi_h) ; -t*Rh*tan(gamma_h)];
-
-    plot3(r(1,:), r(2,:), r(3,:), '--'); 
-
-    hold on;
-    
-    
-    
-    plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
-    plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
-    
-    plot3(out.fixorbout.Data(1,1), out.fixorbout.Data(1,2), out.fixorbout.Data(1,3),'o','Color',sstgray,'MarkerSize',8);
-    plot3(out.fixorbout.Data(end,1), out.fixorbout.Data(end,2), out.fixorbout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
-
-    
-    
-    
-    plot3(out.fixorbout.Data(:,1), out.fixorbout.Data(:,2), out.fixorbout.Data(:,3));
-
-     grid on;
-
-    xlabel('x [m]');
-    ylabel('y [m]');
-    zlabel('z [m]');
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    figB = axis;
-    nsteps = 10;
-    steps = [(figB(2)-figB(1))/(nsteps-1);(figB(4)-figB(3))/(nsteps-1);(figB(6)-figB(5))/(nsteps-1)];
-    [X,Y,Z] = meshgrid(figB(1):steps(1):figB(2),figB(3):steps(2):figB(4),figB(5):steps(3):figB(6));
-    P = [   reshape(X,1,[])
-            reshape(Y,1,[])
-            reshape(Z,1,[]) ];
-    Vraw = orbit_vector_field(P,ParamFixOrb);
-    U = reshape(Vraw(1,:),nsteps,nsteps,nsteps);
-    V = reshape(Vraw(2,:),nsteps,nsteps,nsteps);
-    W = reshape(Vraw(3,:),nsteps,nsteps,nsteps);
-    %quiver3(X,Y,Z,U,V,W);
-    idx_plane = (Z==0);
-    XX = X(idx_plane);
-    YY = Y(idx_plane);
-    UU = U(idx_plane);
-    VV = V(idx_plane);
-    quiver(X,Y,U,V);
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-     hold off;
-     
-     
-     
-     
-     
-     
-     
-      figure(3);
-      
-     plot(t,r(1,:));
-     title('north');
-     hold on;
-     legend('x','x1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,1));
-     hold off;
-
-      figure(4);
-      
-     plot(t,r(2,:));
-     title('east');
-     hold on;
-     legend('y','y1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,2));
-     hold off;
-
-      figure(5);
-      
-     plot(t,-r(3,:));  %rever referenciais
-     title('down');
-     hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,3));
-     hold off;
-     
-     
-      figure(6);
-      
-     %plot(t,-r(3,:));  %rever referenciais
-     title('psi');
-     %hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,4));
-     hold on;
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,7));
-     hold off;
-     
-     
-      figure(7);
-      
-     %plot(t,-r(3,:));  %rever referenciais
-     title('gamma');
-     %hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,5));
-     hold off;
-     
-      figure(8);
-      
-     %plot(t,-r(3,:));  %rever referenciais
-     title('phi');
-     %hold on;
-     legend('z','z1');
-     plot(out.fixorbout.Time, out.fixorbout.Data(:,6));
-     hold off;
-end
 
  

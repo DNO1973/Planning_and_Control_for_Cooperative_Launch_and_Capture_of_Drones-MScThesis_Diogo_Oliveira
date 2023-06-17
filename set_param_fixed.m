@@ -34,8 +34,8 @@ ParamFixLine.gamma_l = gamma_l_line;
 % initial conditions orbit
 
  Rh_orb = 50;
- lambda_orb = -1;
- gamma_h_orb = 0.1;% 15*pi/180;
+ lambda_orb = 1;
+ gamma_h_orb = -0.1;% 15*pi/180;
  psi_h_orb = 0;
  
 k1_orb = 1;

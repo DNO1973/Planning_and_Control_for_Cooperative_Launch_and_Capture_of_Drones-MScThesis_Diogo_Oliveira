@@ -224,6 +224,10 @@ target_link_libraries(test2drones ${catkin_LIBRARIES})
 add_executable(offboard_shuttle_vel_control src/offboard_shuttle_vel_control.cpp)
 target_link_libraries(offboard_shuttle_vel_control ${catkin_LIBRARIES})
 
+add_executable(offboard_target_control src/offboard_target_control.cpp)
+target_link_libraries(offboard_target_control ${catkin_LIBRARIES})
+
+
 add_executable(send_shuttle_target_pos src/send_shuttle_target_pos.cpp)
 target_link_libraries(send_shuttle_target_pos ${catkin_LIBRARIES})
 

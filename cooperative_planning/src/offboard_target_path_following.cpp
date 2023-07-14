@@ -2,6 +2,8 @@
 #include <ros/ros.h>
 #include <drone_utils_cpp/DroneInfo.h>
 #include <mavros_cpp/UAV.h>
+#include <drone_utils_cpp/Utils.h>
+
 #include <geometry_msgs/Point.h>
 #include <std_msgs/Int64.h>
 
@@ -24,6 +26,7 @@ DroneLib::DroneInfo target_drone_info;
 
 //Controller Variables
 geometry_msgs::Point desiredPosition;
+geometry_msgs::Point desiredAttitude;
 geometry_msgs::Point desiredVelocityLinear;
 double desiredHeading;
 
@@ -44,26 +47,35 @@ void calculateDesiredVelocityLinear(){
     desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]);
     desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]);*/
 
-    desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - shuttle->ekf.pos[0][0]) + ki_velocity*((desiredPosition.x  - shuttle->ekf.pos[0][0]) - shuttle->ekf.vel[0][0]) ;
-    desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]) + ki_velocity*((desiredPosition.y  - shuttle->ekf.pos[1][0]) - shuttle->ekf.vel[1][0]) ;
-    desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]) + ki_velocity*((desiredPosition.z  - shuttle->ekf.pos[2][0]) - shuttle->ekf.vel[2][0]) ;
+    desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - target->ekf.pos[0][0]) + ki_velocity*((desiredPosition.x  - target->ekf.pos[0][0]) - target->ekf.vel[0][0]) ;
+    desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - target->ekf.pos[1][0]) + ki_velocity*((desiredPosition.y  - target->ekf.pos[1][0]) - target->ekf.vel[1][0]) ;
+    desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - target->ekf.pos[2][0]) + ki_velocity*((desiredPosition.z  - target->ekf.pos[2][0]) - target->ekf.vel[2][0]) ;
     calculateDesiredHeading();
 }
 
 
 void updateDesiredPosCb(const geometry_msgs::Point::ConstPtr& msg){
         //Enviar mensagem configuracao nova posicao
-        //rostopic pub /cooperative_planning/shuttleController/desired_local_position geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
+        //rostopic pub /cooperative_planning/targetController/desired_local_position geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
 
     desiredPosition.x = msg->x;
     desiredPosition.y = msg->y;
     desiredPosition.z = msg->z;
 }
 
+void updateDesiredAttCb(const geometry_msgs::Point::ConstPtr& msg){
+        //Enviar mensagem configuracao nova attitude
+        //rostopic pub /cooperative_planning/targetController/desired_local_attitude geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
+
+    desiredAttitude.x = msg->x;
+    desiredAttitude.y = msg->y;
+    desiredAttitude.z = msg->z;
+}
+
 
 void desiredPosReached(ros::Publisher pub){
        
-    if ( (abs(shuttle->ekf.pos[0][0]- desiredPosition.x) < proximity_radius) && (abs(shuttle->ekf.pos[1][0]- desiredPosition.y) < proximity_radius) && (abs(shuttle->ekf.pos[2][0]- desiredPosition.z) < proximity_radius) )
+    if ( (abs(target->ekf.pos[0][0]- desiredPosition.x) < proximity_radius) && (abs(target->ekf.pos[1][0]- desiredPosition.y) < proximity_radius) && (abs(target->ekf.pos[2][0]- desiredPosition.z) < proximity_radius) )
         targetReached = 1;
     else{
         targetReached = 0;
@@ -81,6 +93,64 @@ void desiredPosReached(ros::Publisher pub){
          
     
 }     
+
+
+void sendAttitudeSetPoint(ros::Publisher pub, double att_euler[3][1]){
+	std_msgs::Header h;
+	mavros_msgs::AttitudeTarget msg;
+	geometry_msgs::Quaternion q_msg;
+
+	h.stamp = ros::Time::now();
+	msg.header = h;
+
+    //att_euler[0][0]=desiredAttitude.x; att_euler[1][0]=desiredAttitude.y; att_euler[2][0]=desiredAttitude.z;
+
+	double att_enu[3][1];
+	DroneLib::ned_to_enu(att_euler, att_enu);
+	tf2::Quaternion q_tf; q_tf.setRPY(att_enu[0][0],att_enu[1][0],att_enu[2][0]); q_msg = tf2::toMsg(q_tf);
+	
+	
+	msg.orientation = q_msg;
+
+	pub.publish(msg);
+    
+         
+    
+}     
+
+
+void pathFollowingController(){
+	
+        
+        
+        
+        
+        
+        
+        //sendAttitudeSetPoint(set_att_pub);
+         
+    
+}     
+
+void sendTakeOffCommand(ros::Publisher pub){
+	std_msgs::Header h;
+	double pos_enu[3][1];
+	mavros_msgs::PositionTarget msg;
+
+    //takeoff 15 meters in front of initial position and at 20 meters of altitude
+	double pos_ned[3][1];
+    pos_ned[0][0]= 15; pos_ned[1][0]=0; pos_ned[2][0]=-20;    
+
+
+	h.stamp = ros::Time::now();
+	msg.header = h;
+	msg.coordinate_frame = 1; msg.type_mask = 4096;
+	DroneLib::ned_to_enu(pos_ned, pos_enu);
+    msg.position.x = pos_enu[0][0]; msg.position.y = pos_enu[1][0]; msg.position.z = pos_enu[2][0]; 
+	pub.publish(msg);
+
+}  
+
 
 
 
@@ -136,27 +206,37 @@ int main (int argc, char ** argv){
 
     //---------------------------------------------------------------
 
-    ros::Subscriber desired_pos_sub = nh->subscribe("cooperative_planning/shuttleController/desired_local_position", 10, updateDesiredPosCb);
-    ros::Publisher reached_pos_pub = nh->advertise<std_msgs::Int64>("cooperative_planning/shuttleController/reached_target_pos", 10);
+    ros::Subscriber desired_pos_sub = nh->subscribe("cooperative_planning/targetController/desired_local_position", 10, updateDesiredPosCb);
+    ros::Subscriber desired_att_sub = nh->subscribe("cooperative_planning/targetController/desired_local_attitude", 10, updateDesiredAttCb);
+    ros::Publisher reached_pos_pub = nh->advertise<std_msgs::Int64>("cooperative_planning/targetController/reached_target_pos", 10);
+    ros::Publisher set_att_pub = nh->advertise<mavros_msgs::AttitudeTarget>("/"+target_drone_info.drone_ns+"/mavros/setpoint_raw/attitude", 1);
+
+	ros::Publisher  pos_target_pub = nh->advertise<mavros_msgs::PositionTarget>("/"+target_drone_info.drone_ns+"/mavros/setpoint_raw/local", 1);
 
 
     ros::Rate rate(20.0);
 
-    ROS_WARN("STARTING OFFBOARD VELOCITY CONTROLLER FOR SHUTTLE DRONE ");
+    ROS_WARN("STARTING OFFBOARD CONTROLLER FOR TARGET DRONE ");
     double pos[3][1], vel[3][1];
 	double yaw, t0, t;
 
     desiredPosition.x = 0.0;
     desiredPosition.y = 0.0;
-    desiredPosition.z = -3.0;
+    desiredPosition.z = -20.0;
+
+    desiredAttitude.x = 0.0;
+    desiredAttitude.y = 0.0;
+    desiredAttitude.z = 0.0;
 
     pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
     //pos[0][0]=0; pos[1][0]=0; pos[2][0]=-3;
 	yaw = 0.0;
     
-    shuttle->start_offboard_mission();
+    target->start_offboard_mission();
 
-    shuttle->set_pos_yaw(pos, yaw, 10);
+    sendTakeOffCommand(pos_target_pub); //nao esta a funcioanr
+ 
+    target->set_pos_yaw(pos, yaw, 10);
 
     
     
@@ -166,7 +246,7 @@ int main (int argc, char ** argv){
 
 
         //ROS_WARN_STREAM("Current Position" << shuttle->sen.gps.pos[0][0]  << "  " << shuttle->sen.gps.pos[1][0]  << "  " << shuttle->sen.gps.pos[2][0]);
-        ROS_WARN_STREAM("Current Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
+        ROS_WARN_STREAM("Current Position: " << target->ekf.pos[0][0]  << "  " << target->ekf.pos[1][0]  << "  " << target->ekf.pos[2][0]);
         ROS_WARN_STREAM("Desired Position: " << desiredPosition.x  << "  " << desiredPosition.y  << "  " << desiredPosition.z);
 
 
@@ -174,16 +254,13 @@ int main (int argc, char ** argv){
         desiredPosReached(reached_pos_pub);
 
 
-        calculateDesiredVelocityLinear();
+        //calculateDesiredVelocityLinear();
 
-        vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    
-        shuttle->set_vel_yaw(vel, desiredHeading, 0.01);
-
-        //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
-        //shuttle->set_pos_yaw(pos, yaw, 0.01);
+        pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
+        target->set_pos_yaw(pos, yaw, 0.01);
 
 
-
+        //sendAttitudeSetPoint(set_att_pub);
 
 
 
@@ -194,6 +271,25 @@ int main (int argc, char ** argv){
     }
 
     return 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

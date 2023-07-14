@@ -121,6 +121,32 @@ void sendAttitudeSetPoint(ros::Publisher pub){
 
 
 
+
+void sendTakeOffCommand(ros::Publisher pub){
+	std_msgs::Header h;
+	double pos_enu[3][1];
+	mavros_msgs::PositionTarget msg;
+
+    //takeoff 15 meters in front of initial position and at 20 meters of altitude
+	double pos_ned[3][1];
+    pos_ned[0][0]= 15; pos_ned[1][0]=0; pos_ned[2][0]=-20;    
+
+
+	h.stamp = ros::Time::now();
+	msg.header = h;
+	msg.coordinate_frame = 1; msg.type_mask = 4096;
+	DroneLib::ned_to_enu(pos_ned, pos_enu);
+    msg.position.x = pos_enu[0][0]; msg.position.y = pos_enu[1][0]; msg.position.z = pos_enu[2][0]; 
+	pub.publish(msg);
+
+}  
+
+
+
+
+
+
+
 int main (int argc, char ** argv){
     /* Initiate the node */
     ros::init(argc, argv, "offboard_shuttle_vel_control");
@@ -175,6 +201,8 @@ int main (int argc, char ** argv){
     ros::Publisher reached_pos_pub = nh->advertise<std_msgs::Int64>("cooperative_planning/targetController/reached_target_pos", 10);
     ros::Publisher set_att_pub = nh->advertise<mavros_msgs::AttitudeTarget>("/"+target_drone_info.drone_ns+"/mavros/setpoint_raw/attitude", 1);
 
+	ros::Publisher  pos_target_pub = nh->advertise<mavros_msgs::PositionTarget>("/"+target_drone_info.drone_ns+"/mavros/setpoint_raw/local", 1);
+
 
     ros::Rate rate(20.0);
 
@@ -196,6 +224,8 @@ int main (int argc, char ** argv){
     
     target->start_offboard_mission();
 
+    sendTakeOffCommand(pos_target_pub); //nao esta a funcioanr
+ 
     target->set_pos_yaw(pos, yaw, 10);
 
     
@@ -216,11 +246,11 @@ int main (int argc, char ** argv){
 
         //calculateDesiredVelocityLinear();
 
-        //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
-        //target->set_pos_yaw(pos, yaw, 0.01);
+        pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
+        target->set_pos_yaw(pos, yaw, 0.01);
 
 
-        sendAttitudeSetPoint(set_att_pub);
+        //sendAttitudeSetPoint(set_att_pub);
 
 
 

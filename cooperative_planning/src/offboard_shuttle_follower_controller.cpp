@@ -5,6 +5,7 @@
 #include <mavros_cpp/UAV.h>
 #include <geometry_msgs/Point.h>
 #include <std_msgs/Int64.h>
+#include <std_msgs/Empty.h>
 
 
 #include <mavros_msgs/CommandBool.h>
@@ -28,8 +29,7 @@ geometry_msgs::Point desiredPosition;
 geometry_msgs::Point desiredVelocityLinear;
 double desiredHeading;
 
-//double kp_velocity = 5, ki_velocity = kp_velocity/4, kp_heading = 1;
-double kp_velocity = 10, ki_velocity = 0.1, kp_heading = 1;
+double kp_velocity = 1, ki_velocity = 0.1, kp_heading = 1;
 int proximity_radius = 1;
 int verticalDistance = 5;
 
@@ -40,23 +40,25 @@ double position_error[3][1];
 
 double Tprev;
 
+
+
+//hardcoded trajectory points
+double shuttle_waiting_point[3][1];
+double target_inform_point[3][1];
+double shuttle_stop_area[3][1];
+
+
+
+
+
+
+
 void calculateDesiredHeading(){
    desiredHeading = kp_heading*((atan2(desiredVelocityLinear.y , desiredVelocityLinear.x ) - M_PI/2) - shuttle->ekf.ang_vel[2][0]);
 
 }
 
-void calculateDesiredVelocityLinear(){
-    /*desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - shuttle->ekf.pos[0][0]);
-    desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]);
-    desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]);*/
-
-
-
-   /* desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - shuttle->ekf.pos[0][0]) + ki_velocity*((desiredPosition.x  - shuttle->ekf.pos[0][0]) - shuttle->ekf.vel[0][0]) ;
-    desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]) + ki_velocity*((desiredPosition.y  - shuttle->ekf.pos[1][0]) - shuttle->ekf.vel[1][0]);
-    desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]) + ki_velocity*((desiredPosition.z  - shuttle->ekf.pos[2][0]) - shuttle->ekf.vel[2][0]);
-    */
-
+void calculateDesiredVelocityLinear(){//REVER ISTO POSSIVELMENTE ESTA MAL; CONFIRMAR DESIRED POSTION DEPOIS DE O COMANDAR COM GANHOS DIFERENTES
     double e_pX = desiredPosition.x  - shuttle->ekf.pos[0][0];
     double e_pY = desiredPosition.y  - shuttle->ekf.pos[1][0];
     double e_pZ = desiredPosition.z  - shuttle->ekf.pos[2][0];
@@ -75,9 +77,18 @@ void calculateDesiredVelocityLinear(){
     
     calculateDesiredHeading();
 }
- 
 
-void updateDesiredPosition(double x, double y, double z){
+
+void updateDesiredPosCb(const geometry_msgs::Point::ConstPtr& msg){
+        //Enviar mensagem configuracao nova posicao
+        //rostopic pub /cooperative_planning/state_machine/shuttleController/desired_local_position geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
+
+    desiredPosition.x = msg->x;
+    desiredPosition.y = msg->y;
+    desiredPosition.z = msg->z;
+}
+
+void updateDesiredPositionFollower(double x, double y, double z){
        
     desiredPosition.x = target->ekf.pos[0][0] + x;
     desiredPosition.y = target->ekf.pos[1][0] + y;
@@ -87,15 +98,38 @@ void updateDesiredPosition(double x, double y, double z){
 
 
 
+void desiredPosReached(ros::Publisher pub){
+       
+    if ( (abs(shuttle->ekf.pos[0][0]- desiredPosition.x) < proximity_radius) && (abs(shuttle->ekf.pos[1][0]- desiredPosition.y) < proximity_radius) && (abs(shuttle->ekf.pos[2][0]- desiredPosition.z) < proximity_radius) )
+        targetReached = 1;
+    else{
+        targetReached = 0;
+        reachedFlag = 0;
+    }  
+        
+
+    if (targetReached && reachedFlag == 0){
+        reachedFlag = 1;
+        std_msgs::Empty msg;
+        pub.publish(msg);
+
+    }
+         
+    
+}     
+
+
+
+
 
 
 int main (int argc, char ** argv){
     /* Initiate the node */
-    ros::init(argc, argv, "offboard_shuttle_follower");
+    ros::init(argc, argv, "offboard_shuttle_follower_controller");
     nh = new ros::NodeHandle();
     nh_p = new ros::NodeHandle("~");
 
-    /* Get the namespace of the drones and other parameters */
+   /* Get the namespace of the drones and other parameters */
     shuttle_drone_info.drone_ns = DroneGimmicks::getParameters<std::string>(*nh, "namespaceShuttle");
     shuttle_drone_info.ID = DroneGimmicks::getParameters<double>(*nh, "IDShuttle");
     shuttle_drone_info.mass = DroneGimmicks::getParameters<double>(*nh, "drone_params/mass");
@@ -146,17 +180,27 @@ int main (int argc, char ** argv){
     double referential_relative_to_shuttle_z = aux_ned[2][0];
 
 
+    //hardcoded trajectory points
+    shuttle_waiting_point[0][0]=5; shuttle_waiting_point[1][0]=-100; shuttle_waiting_point[2][0]=-25;    
+    target_inform_point[0][0]=50; target_inform_point[1][0]=-100; target_inform_point[2][0]=-25;    
+    shuttle_stop_area[0][0]=5; shuttle_stop_area[1][0]=100; shuttle_stop_area[2][0]=-25;    
 
 
-    ros::Rate rate(10.0);
 
-    ROS_WARN("STARTING OFFBOARD VELOCITY CONTROLLER FOR SHUTTLE DRONE FOLLOWING A QUADROTOR");
+
+    ros::Subscriber desired_pos_sub = nh->subscribe("cooperative_planning/state_machine/desired_local_position", 10, updateDesiredPosCb);
+    ros::Publisher reached_pos_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/shuttle_reached_desired_position", 10);
+
+
+    ros::Rate rate(20.0);
+
+    ROS_WARN("STARTING OFFBOARD VELOCITY CONTROLLER FOR SHUTTLE DRONE ");
     double pos[3][1], vel[3][1];
 	double yaw, t0, t;
 
     desiredPosition.x = 0.0;
     desiredPosition.y = 0.0;
-    desiredPosition.z = -10.0;
+    desiredPosition.z = -25.0;
 
     pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
     //pos[0][0]=0; pos[1][0]=0; pos[2][0]=-3;
@@ -167,8 +211,10 @@ int main (int argc, char ** argv){
     shuttle->set_pos_yaw(pos, yaw, 10);
 
     
+    
     Tprev = ros::Time::now().toSec();
     position_error[0][0]= 0; position_error[1][0]= 0; position_error[2][0]=0;
+
     while(ros::ok()){
       
 
@@ -179,16 +225,24 @@ int main (int argc, char ** argv){
 
 
 
-        updateDesiredPosition(referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
+        desiredPosReached(reached_pos_pub);
 
+        //updateDesiredPositionFollower(referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
 
         calculateDesiredVelocityLinear();
 
-        vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    
+        //vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    
+        //shuttle->set_vel_yaw(vel, desiredHeading, 0.001);
+        //REVEER O CONTROLADOR LA DE CIMA PRA CORRIGIr os ganhos
+
+
+        //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
+        //shuttle->set_pos_yaw(pos, yaw, 0.01);
+        
+        
+        vel[0][0]=0; vel[1][0]= 50; vel[2][0]=0;    
         shuttle->set_vel_yaw(vel, desiredHeading, 0.001);
 
-      
-        
 
 
 
@@ -201,5 +255,30 @@ int main (int argc, char ** argv){
     }
 
     return 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

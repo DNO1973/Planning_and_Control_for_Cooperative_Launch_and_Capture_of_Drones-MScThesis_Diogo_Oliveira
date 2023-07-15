@@ -7,13 +7,13 @@ import smach_ros
 from std_msgs.msg import Empty
 
 from geometry_msgs.msg import Point
+from std_msgs.msg import Int32
 
 class SendToWaitingPoint(smach.State):
     def __init__(self):
         #smach.State.__init__(self, outcomes=['reached_waiting_point','not_reached_waiting_point'],input_keys=['send_waiting_pub'])
         smach.State.__init__(self, outcomes=['reached_waiting_point','not_reached_waiting_point'])
         self.target_pos_pub = rospy.Publisher('/cooperative_planning/state_machine/desired_local_position', Point, queue_size=10)
-        self.reached_pos_sub = rospy.Subscriber("/cooperative_planning/state_machine/shuttle_reached_desired_position", Empty, self.posReachedCb)
         self.reached_waiting_point = 0
     
     def posReachedCb(self, msg):
@@ -21,11 +21,12 @@ class SendToWaitingPoint(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state SEND_TO_WAITING_POINT')
+        self.reached_pos_sub = rospy.Subscriber("/cooperative_planning/state_machine/shuttle_reached_desired_position", Empty, self.posReachedCb)
         
-        pos_to_send = Point()
+        pos_to_send = Point() #hardcoded shuttle waiting point
         pos_to_send.x = 5
         pos_to_send.y = -100
-        pos_to_send.z = -25
+        pos_to_send.z = -22
 
         
         self.target_pos_pub.publish(pos_to_send)
@@ -37,11 +38,10 @@ class SendToWaitingPoint(smach.State):
             return 'reached_waiting_point'
         
 
-
+#CORRIGIR - ACEOTA COMANDOS DE READY MESMO QUE AINDA NAO ESTEJA NESSE EstADO
 class IdleNotReady(smach.State): #Para enviar comando de start: rostopic pub -1 /cooperative_planning/state_machine/start_command std_msgs/Empty
     def __init__(self):
         smach.State.__init__(self, outcomes=['start_command_received', 'start_command_not_received'])
-        self.start_command_sub = rospy.Subscriber("/cooperative_planning/state_machine/start_command", Empty, self.startCommandCb)
         self.start_command = 0
 
     def startCommandCb(self, msg):
@@ -49,6 +49,7 @@ class IdleNotReady(smach.State): #Para enviar comando de start: rostopic pub -1 
 
     def execute(self, userdata):
         rospy.loginfo('Executing state IDLE_NOT_READY')
+        self.start_command_sub = rospy.Subscriber("/cooperative_planning/state_machine/start_command", Empty, self.startCommandCb)
 
     
         if self.start_command == 0:
@@ -61,44 +62,121 @@ class IdleNotReady(smach.State): #Para enviar comando de start: rostopic pub -1 
 class IdleReadyForTarget(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['target_reached_inform_point', 'target_not_reached_inform_point'])
+        self.target_reached_inform_point = 0
+
+    def targetReachedInformPointCb(self, msg):
+        self.target_reached_inform_point = 1
 
     def execute(self, userdata):
         rospy.loginfo('Executing state IDLE_READY_FOR_TARGET')
-        rospy.sleep(2)
+        self.target_reached_sub = rospy.Subscriber("/cooperative_planning/state_machine/target_reached_inform_point", Empty, self.targetReachedInformPointCb)
 
-        return 'target_reached_inform_point'
-        #return 'target_not_reached_inform_point'
+    
+        if self.target_reached_inform_point == 0:
+            return 'target_not_reached_inform_point'
+        else:
+            self.target_reached_inform_point = 0
+            return 'target_reached_inform_point'
         
 
-class StartMovingToPerformManeuver(smach.State):
+class StartMovingToPerformManeuver(smach.State): #CORRIGIR - ESTA A CONTAR JA COM O POSITION REACHED DO ANTERIR
     def __init__(self):
-        smach.State.__init__(self, outcomes=['reached_stop_area', 'target_is_close_warning'])
+        smach.State.__init__(self, outcomes=['reached_stop_area', 'target_is_close_warning', 'not_reached_stop_area' ])
+        self.target_pos_pub = rospy.Publisher('/cooperative_planning/state_machine/desired_local_position', Point, queue_size=10)
+        self.reached_stop_area = 0
+        self.target_is_close = 0
+
+
+    def posReachedCb(self, msg):
+        self.reached_stop_area = 1
+
+    def targetCloseWarningCb(self, msg):
+        self.target_is_close = 1
 
     def execute(self, userdata):
         rospy.loginfo('Executing state START_MOVING_TO_PERFORM_MANEUVER')
-        rospy.sleep(2)
+        self.reached_pos_sub = rospy.Subscriber("/cooperative_planning/state_machine/shuttle_reached_desired_position", Empty, self.posReachedCb)
+        self.target_reached_sub = rospy.Subscriber("/cooperative_planning/state_machine/target_is_close", Empty, self.targetCloseWarningCb)
+        
+        pos_to_send = Point() #hardcoded shuttle stop area
+        pos_to_send.x = 5
+        pos_to_send.y = 100
+        pos_to_send.z = -22
+        self.target_pos_pub.publish(pos_to_send)
 
-        return 'target_is_close_warning'
+
+        if self.reached_stop_area == 0:                     
+            if self.target_is_close == 0:
+                return 'not_reached_stop_area'
+            else:
+                self.target_is_close = 0
+                return 'target_is_close_warning'
+        else:
+            self.reached_stop_area = 0
+            return 'reached_stop_area'
+
+
+        
+        #return 'target_is_close_warning'
         #return 'reached_stop_area'
 
 class ExecuteCaptureManeuver(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['capture_success', 'capture_failure'])
-
+        self.execute_capture_maneuver_pub = rospy.Publisher('/cooperative_planning/state_machine/execute_capture_maneuver', Empty, queue_size=10)
+        self.capture_status = 0
+    def captureSuccessCb(self, msg):
+        if(msg.data == 1):
+            capture_status = 1
+        else: 
+            capture_status = 0
+    
+    
     def execute(self, userdata):
         rospy.loginfo('Executing state EXECUTE_CAPTURE_MANEUVER')
-        rospy.sleep(2)
+        self.capture_success_sub = rospy.Subscriber("/cooperative_planning/state_machine/capture_success", Int32, self.captureSuccessCb)
+        self.target_vel_pub = rospy.Publisher('/cooperative_planning/state_machine/desired_local_velocity', Point, queue_size=10)
 
-        return 'capture_failure'
-        #return 'capture_success'
+        msg = Empty() #hardcoded shuttle waiting point
+        
+        self.execute_capture_maneuver_pub.publish(msg)
+        rospy.sleep(20)
 
+        #vel_to_send = Point() #come to a full stop
+        #vel_to_send.x = 0
+        #vel_to_send.y = 0
+        #vel_to_send.z = 0
+        #
+        #self.target_vel_pub.publish(vel_to_send)
+        #rospy.sleep(10)
+        
+        #if self.capture_status == 0:
+         #   return 'capture_failure'
+        #else:
+        #    self.capture_status = 0
+        #    return 'capture_success'
+        return 'capture_success'
+        
+    
 class PerformLanding(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['landing_success'])
+        self.target_pos_pub = rospy.Publisher('/cooperative_planning/state_machine/desired_local_position', Point, queue_size=10)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state PERFORM_LANDING')
-        rospy.sleep(2)
+        
+        
+       # rospy.sleep(5)
+        
+        self.target_pos_pub.publish(pos_to_send)
+        pos_to_send = Point() #hardcoded land position
+        pos_to_send.x = 0
+        pos_to_send.y = 0
+        pos_to_send.z = -22
+
+        
+        self.target_pos_pub.publish(pos_to_send)
 
         return 'landing_success'
 
@@ -155,6 +233,7 @@ def main():
         
         smach.StateMachine.add('START_MOVING_TO_PERFORM_MANEUVER', StartMovingToPerformManeuver(), 
                                transitions={'reached_stop_area':'SEND_TO_WAITING_POINT',
+                                            'not_reached_stop_area':'START_MOVING_TO_PERFORM_MANEUVER',
                                             'target_is_close_warning':'EXECUTE_CAPTURE_MANEUVER'})
         
         smach.StateMachine.add('EXECUTE_CAPTURE_MANEUVER', ExecuteCaptureManeuver(), 

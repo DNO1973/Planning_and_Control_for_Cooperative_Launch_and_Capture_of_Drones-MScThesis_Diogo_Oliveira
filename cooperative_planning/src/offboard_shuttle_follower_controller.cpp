@@ -5,6 +5,7 @@
 #include <mavros_cpp/UAV.h>
 #include <geometry_msgs/Point.h>
 #include <std_msgs/Int64.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/Empty.h>
 
 
@@ -29,14 +30,27 @@ geometry_msgs::Point desiredPosition;
 geometry_msgs::Point desiredVelocityLinear;
 double desiredHeading;
 
-double kp_velocity = 1, ki_velocity = 0.1, kp_heading = 1;
-int proximity_radius = 1;
-int verticalDistance = 5;
+double kp_velocity = 1, ki_velocity = 0, kd_velocity = 0, kp_heading = 1;
+int proximity_radius_shuttle = 1;
+int proximity_radius_target = 15;
+int target_shuttle_vertical_closeness = 6;
+int target_shuttle_horizontal_closeness = 4;
+int verticalDistance = 2;
 
 int targetReached = 0;
 int reachedFlag = 0;
 
+int informPointReached = 0;
+int reachedFlagTarget = 0;
+
+int targetReachedShuttle = 0;
+int targetCloseFlag = 0;
+
+int captureMoment = 0;
+int captureStatus = 0;
+
 double position_error[3][1];
+double previous_error[3][1];
 
 double Tprev;
 
@@ -47,7 +61,9 @@ double shuttle_waiting_point[3][1];
 double target_inform_point[3][1];
 double shuttle_stop_area[3][1];
 
-
+double referential_relative_to_shuttle_x;
+double referential_relative_to_shuttle_y;
+double referential_relative_to_shuttle_z;
 
 
 
@@ -68,14 +84,44 @@ void calculateDesiredVelocityLinear(){//REVER ISTO POSSIVELMENTE ESTA MAL; CONFI
     position_error[1][0] += (Tatual - Tprev)*e_pY;
     position_error[2][0] += (Tatual - Tprev)*e_pZ;
     
-    Tprev = Tatual;
+    double e_dX = (e_pX  - previous_error[0][0])/(Tatual - Tprev);
+    double e_dY = (e_pY  - previous_error[1][0])/(Tatual - Tprev);
+    double e_dZ = (e_pZ  - previous_error[2][0])/(Tatual - Tprev);
 
-    desiredVelocityLinear.x = kp_velocity*e_pX + ki_velocity*position_error[0][0];
-    desiredVelocityLinear.y = kp_velocity*e_pY + ki_velocity*position_error[1][0];
-    desiredVelocityLinear.z = kp_velocity*e_pZ + ki_velocity*position_error[2][0];
-    
-    
+    Tprev = Tatual;
+    previous_error[0][0]= e_pX; previous_error[1][0]= e_pY; previous_error[2][0]=e_pZ;
+
+
+    desiredVelocityLinear.x = kp_velocity*e_pX + ki_velocity*position_error[0][0] + kd_velocity*e_dX;
+    desiredVelocityLinear.y = kp_velocity*e_pY + ki_velocity*position_error[1][0] + kd_velocity*e_dY;
+    desiredVelocityLinear.z = kp_velocity*e_pZ + ki_velocity*position_error[2][0] + kd_velocity*e_dZ;
     calculateDesiredHeading();
+}
+
+
+void captureStatusResult(ros::Publisher pub){
+    //Develop here capture sensing mechanism, as of now, all captures succeed
+    std_msgs::Int32 msg;
+    msg.data = 1;
+    pub.publish(msg);
+}
+
+void executeCaptureManeuverCb(const std_msgs::Empty::ConstPtr& msg){
+
+    captureMoment = 1;
+
+   /* desiredVelocityLinear.x = shuttle->ekf.pos[0][0];
+    desiredVelocityLinear.y = shuttle->ekf.pos[1][0];
+    desiredVelocityLinear.z = 5;
+*/
+
+   // desiredPosition.x = target->ekf.pos[0][0] +  referential_relative_to_shuttle_x;
+   // desiredPosition.y = target->ekf.pos[1][0] + referential_relative_to_shuttle_y;
+   // desiredPosition.z = target->ekf.pos[2][0] + referential_relative_to_shuttle_z;
+    
+    
+    captureStatus = 1;
+
 }
 
 
@@ -88,11 +134,23 @@ void updateDesiredPosCb(const geometry_msgs::Point::ConstPtr& msg){
     desiredPosition.z = msg->z;
 }
 
+void updateDesiredVelCb(const geometry_msgs::Point::ConstPtr& msg){
+        //Enviar mensagem configuracao nova velocidade
+        //rostopic pub /cooperative_planning/state_machine/shuttleController/desired_local_velocity geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
+
+   
+    desiredVelocityLinear.x = msg->x;
+    desiredVelocityLinear.y = msg->y;
+    desiredVelocityLinear.z = msg->z;
+}
+
+
 void updateDesiredPositionFollower(double x, double y, double z){
        
     desiredPosition.x = target->ekf.pos[0][0] + x;
     desiredPosition.y = target->ekf.pos[1][0] + y;
-    desiredPosition.z = target->ekf.pos[2][0] - verticalDistance + z;
+    //desiredPosition.z = target->ekf.pos[2][0] - verticalDistance + z;
+    desiredPosition.z = target->ekf.pos[2][0]  + z;
     
 }     
 
@@ -100,7 +158,7 @@ void updateDesiredPositionFollower(double x, double y, double z){
 
 void desiredPosReached(ros::Publisher pub){
        
-    if ( (abs(shuttle->ekf.pos[0][0]- desiredPosition.x) < proximity_radius) && (abs(shuttle->ekf.pos[1][0]- desiredPosition.y) < proximity_radius) && (abs(shuttle->ekf.pos[2][0]- desiredPosition.z) < proximity_radius) )
+    if ( (abs(shuttle->ekf.pos[0][0]- desiredPosition.x) < proximity_radius_shuttle) && (abs(shuttle->ekf.pos[1][0]- desiredPosition.y) < proximity_radius_shuttle) && (abs(shuttle->ekf.pos[2][0]- desiredPosition.z) < proximity_radius_shuttle) )
         targetReached = 1;
     else{
         targetReached = 0;
@@ -120,7 +178,46 @@ void desiredPosReached(ros::Publisher pub){
 
 
 
+void targetDesiredPosReached(ros::Publisher pub, double x, double y, double z){
+       
+    if ( (abs(target->ekf.pos[0][0] + x- target_inform_point[0][0]) < proximity_radius_target) && (abs(target->ekf.pos[1][0] + y - target_inform_point[1][0]) < proximity_radius_target) )
+        informPointReached = 1;
+    else{
+        informPointReached = 0;
+        reachedFlagTarget = 0;
+    }  
+        
 
+    if (informPointReached && reachedFlagTarget == 0){
+        reachedFlagTarget = 1;
+        std_msgs::Empty msg;
+        pub.publish(msg);
+
+    }
+         
+    
+}     
+
+
+void targetIsCloseWarning(ros::Publisher pub, double x, double y, double z){
+       
+    if ( (abs(target->ekf.pos[0][0] + x- shuttle->ekf.pos[0][0]) < target_shuttle_horizontal_closeness) && (abs(target->ekf.pos[1][0] + y- shuttle->ekf.pos[1][0]) < target_shuttle_horizontal_closeness) && (abs(target->ekf.pos[2][0] + z - shuttle->ekf.pos[2][0]) < target_shuttle_vertical_closeness) )
+        targetReachedShuttle = 1;
+    else{
+        targetReachedShuttle = 0;
+        targetCloseFlag = 0;
+    }  
+        
+
+    if (targetReachedShuttle && targetCloseFlag == 0){
+        targetCloseFlag = 1;
+        std_msgs::Empty msg;
+        pub.publish(msg);
+
+    }
+         
+    
+}     
 
 
 int main (int argc, char ** argv){
@@ -175,22 +272,26 @@ int main (int argc, char ** argv){
     aux_enu[2][0] =  DroneGimmicks::getParameters<double>(*nh, "initialRelativeDistanceZ");
     
     DroneLib::enu_to_ned(aux_enu, aux_ned);
-    double referential_relative_to_shuttle_x = aux_ned[0][0];
-    double referential_relative_to_shuttle_y = aux_ned[1][0];
-    double referential_relative_to_shuttle_z = aux_ned[2][0];
+    referential_relative_to_shuttle_x = aux_ned[0][0];
+    referential_relative_to_shuttle_y = aux_ned[1][0];
+    referential_relative_to_shuttle_z = aux_ned[2][0];
 
 
     //hardcoded trajectory points
-    shuttle_waiting_point[0][0]=5; shuttle_waiting_point[1][0]=-100; shuttle_waiting_point[2][0]=-25;    
-    target_inform_point[0][0]=50; target_inform_point[1][0]=-100; target_inform_point[2][0]=-25;    
-    shuttle_stop_area[0][0]=5; shuttle_stop_area[1][0]=100; shuttle_stop_area[2][0]=-25;    
+    shuttle_waiting_point[0][0]=5; shuttle_waiting_point[1][0]=-100; shuttle_waiting_point[2][0]=-22;    
+    target_inform_point[0][0]=50; target_inform_point[1][0]=-100; target_inform_point[2][0]=-22;    
+    shuttle_stop_area[0][0]=5; shuttle_stop_area[1][0]=100; shuttle_stop_area[2][0]=-22;    
 
 
 
 
     ros::Subscriber desired_pos_sub = nh->subscribe("cooperative_planning/state_machine/desired_local_position", 10, updateDesiredPosCb);
+    ros::Subscriber desired_vel_sub = nh->subscribe("cooperative_planning/state_machine/desired_local_velocity", 10, updateDesiredVelCb);
     ros::Publisher reached_pos_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/shuttle_reached_desired_position", 10);
-
+    ros::Publisher target_reached_pos_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/target_reached_inform_point", 10);
+    ros::Publisher target_is_close_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/target_is_close", 10);
+    ros::Subscriber execute_capture_maneuver_sub = nh->subscribe("cooperative_planning/state_machine/execute_capture_maneuver", 10, executeCaptureManeuverCb);
+    ros::Publisher capture_status_pub = nh->advertise<std_msgs::Int32>("cooperative_planning/state_machine/capture_success", 10);
 
     ros::Rate rate(20.0);
 
@@ -200,7 +301,7 @@ int main (int argc, char ** argv){
 
     desiredPosition.x = 0.0;
     desiredPosition.y = 0.0;
-    desiredPosition.z = -25.0;
+    desiredPosition.z = -22.0;
 
     pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
     //pos[0][0]=0; pos[1][0]=0; pos[2][0]=-3;
@@ -212,8 +313,9 @@ int main (int argc, char ** argv){
 
     
     
-    Tprev = ros::Time::now().toSec();
+     Tprev = ros::Time::now().toSec();
     position_error[0][0]= 0; position_error[1][0]= 0; position_error[2][0]=0;
+    previous_error[0][0]= 0; previous_error[1][0]= 0; previous_error[2][0]=0;
 
     while(ros::ok()){
       
@@ -222,30 +324,38 @@ int main (int argc, char ** argv){
         //ROS_WARN_STREAM("Current Position" << shuttle->sen.gps.pos[0][0]  << "  " << shuttle->sen.gps.pos[1][0]  << "  " << shuttle->sen.gps.pos[2][0]);
         ROS_WARN_STREAM("Current Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
         ROS_WARN_STREAM("Desired Position: " << desiredPosition.x  << "  " << desiredPosition.y  << "  " << desiredPosition.z);
+        ROS_WARN_STREAM("Current Velocity: " << shuttle->ekf.vel[0][0]  << "  " << shuttle->ekf.vel[1][0]  << "  " << shuttle->ekf.vel[2][0]);
+        ROS_WARN_STREAM("Desired Position: " << desiredVelocityLinear.x  << "  " << desiredVelocityLinear.y  << "  " << desiredVelocityLinear.z);
 
 
 
         desiredPosReached(reached_pos_pub);
+        targetDesiredPosReached(target_reached_pos_pub, referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
+        targetIsCloseWarning(target_is_close_pub, referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
+        
 
-        //updateDesiredPositionFollower(referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
+        //if(!captureMoment)
+            calculateDesiredVelocityLinear();
+        
+        /*if(captureStatus){
+            captureStatusResult(capture_status_pub);
+            captureStatus = 0;
+            captureMoment = 0;
+            
+        }*/
 
-        calculateDesiredVelocityLinear();
+        if(captureMoment) updateDesiredPositionFollower(referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
 
-        //vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    
-        //shuttle->set_vel_yaw(vel, desiredHeading, 0.001);
+
+        vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    
+        shuttle->set_vel_yaw(vel, desiredHeading, 0.001);
         //REVEER O CONTROLADOR LA DE CIMA PRA CORRIGIr os ganhos
 
 
         //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
         //shuttle->set_pos_yaw(pos, yaw, 0.01);
         
-        
-        vel[0][0]=0; vel[1][0]= 50; vel[2][0]=0;    
-        shuttle->set_vel_yaw(vel, desiredHeading, 0.001);
-
-
-
-
+       
 
 
 

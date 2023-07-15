@@ -27,11 +27,19 @@ geometry_msgs::Point desiredPosition;
 geometry_msgs::Point desiredVelocityLinear;
 double desiredHeading;
 
-double kp_velocity = 5, ki_velocity = kp_velocity/4, kp_heading = 1;
+double kp_velocity = 0.5, ki_velocity = 0.2, kd_velocity = 0.1, kp_heading = 1;
 
 int proximity_radius = 1;
 int targetReached = 0;
 int reachedFlag = 0;
+
+
+double position_error[3][1];
+double previous_error[3][1];
+
+double Tprev;
+
+
 
 
 void calculateDesiredHeading(){
@@ -40,13 +48,26 @@ void calculateDesiredHeading(){
 }
 
 void calculateDesiredVelocityLinear(){
-    /*desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - shuttle->ekf.pos[0][0]);
-    desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]);
-    desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]);*/
+    double e_pX = desiredPosition.x  - shuttle->ekf.pos[0][0];
+    double e_pY = desiredPosition.y  - shuttle->ekf.pos[1][0];
+    double e_pZ = desiredPosition.z  - shuttle->ekf.pos[2][0];
 
-    desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - shuttle->ekf.pos[0][0]) + ki_velocity*((desiredPosition.x  - shuttle->ekf.pos[0][0]) - shuttle->ekf.vel[0][0]) ;
-    desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]) + ki_velocity*((desiredPosition.y  - shuttle->ekf.pos[1][0]) - shuttle->ekf.vel[1][0]) ;
-    desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]) + ki_velocity*((desiredPosition.z  - shuttle->ekf.pos[2][0]) - shuttle->ekf.vel[2][0]) ;
+    double Tatual = ros::Time::now().toSec();
+    position_error[0][0] += (Tatual - Tprev)*e_pX;
+    position_error[1][0] += (Tatual - Tprev)*e_pY;
+    position_error[2][0] += (Tatual - Tprev)*e_pZ;
+    
+    double e_dX = (e_pX  - previous_error[0][0])/(Tatual - Tprev);
+    double e_dY = (e_pY  - previous_error[1][0])/(Tatual - Tprev);
+    double e_dZ = (e_pZ  - previous_error[2][0])/(Tatual - Tprev);
+
+    Tprev = Tatual;
+    previous_error[0][0]= e_pX; previous_error[1][0]= e_pY; previous_error[2][0]=e_pZ;
+
+
+    desiredVelocityLinear.x = kp_velocity*e_pX + ki_velocity*position_error[0][0] + kd_velocity*e_dX;
+    desiredVelocityLinear.y = kp_velocity*e_pY + ki_velocity*position_error[1][0] + kd_velocity*e_dY;
+    desiredVelocityLinear.z = kp_velocity*e_pZ + ki_velocity*position_error[2][0] + kd_velocity*e_dZ;
     calculateDesiredHeading();
 }
 
@@ -159,7 +180,10 @@ int main (int argc, char ** argv){
     shuttle->set_pos_yaw(pos, yaw, 10);
 
     
-    
+     Tprev = ros::Time::now().toSec();
+    position_error[0][0]= 0; position_error[1][0]= 0; position_error[2][0]=0;
+    previous_error[0][0]= 0; previous_error[1][0]= 0; previous_error[2][0]=0;
+
 
     while(ros::ok()){
       

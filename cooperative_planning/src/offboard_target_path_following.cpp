@@ -5,6 +5,7 @@
 #include <drone_utils_cpp/Utils.h>
 
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Int64.h>
 
 
@@ -13,6 +14,7 @@
 #include <mavros_msgs/State.h>
 #include <cmath>
 #include <math.h>
+#include <eigen3/Eigen/Dense>
 
 ros::NodeHandle * nh;
 ros::NodeHandle * nh_p;
@@ -37,6 +39,79 @@ int targetReached = 0;
 int reachedFlag = 0;
 
 
+
+
+
+//Path following controller variables
+double gamma_limit = M_PI/6;
+double phi_limit = M_PI/6;
+double kphi= 1;
+
+double k1_line = 1;
+double k2_line = 10;
+double k1_orb = 1;
+double k2_orb = 10;
+
+//dubins path
+
+//segment line 1
+double c0_line1[3] = {5, -100, -20};
+double psi_l_line1 = 0;
+double gamma_l_line1 = 0;
+
+//segment orb 2
+double rh_orb2 = 22.5;
+double lambda_orb2 = 1;
+double gamma_h_orb2 = 0;
+double psi_h_orb2 = 3*M_PI/2;
+double ch_orb2[3] = {27.5, 100, -20};
+
+//segment line 3
+double c0_line3[3] = {50, 100, -20};
+double psi_l_line3 = M_PI;
+double gamma_l_line3 = 0;
+
+//segment orb 4
+double rh_orb4 = 22.5;
+double lambda_orb4 = 1;
+double gamma_h_orb4 = 0;
+double psi_h_orb4 = 3*M_PI/2;
+double ch_orb4[3] = {27.5, -100, -20};
+
+
+int pathsType[4] = {0,1,0,1};
+double paths_c0[4][3] = { {5, -100, -20}/*c0_line1*/,
+                          {27.5, 100, -20}/*ch_orb2*/,
+                          {50, 100, -20}/*c0_line3*/,
+                          {27.5, -100, -20}/*ch_orb4*/};
+
+
+double _psi_l[4] = {psi_l_line1,0,psi_l_line3,0};
+double _gamma_l[4] = {gamma_l_line1,0,gamma_l_line3,0};
+
+double _rh_h[4] = {0,rh_orb2,0,rh_orb4};
+double _lambda_h[4] = {0,lambda_orb2,0,lambda_orb4};
+double _gamma_h[4] = {0,gamma_h_orb2,0,gamma_h_orb4};
+double _psi_h[4] = {0,psi_h_orb2,0,psi_h_orb4};
+
+
+double u[3] = {0,0,0};
+double psidPrevious = 0;
+
+
+//Target Path Parameters
+//---------------------------------------------------
+double proximity_to_next_path = 10;
+int _path_segment = 0;
+double p0[3];
+double psi0;
+
+
+//---------------------------------------------------
+
+
+
+
 void calculateDesiredHeading(){
    desiredHeading = kp_heading*((atan2(desiredVelocityLinear.y , desiredVelocityLinear.x ) - M_PI/2) - shuttle->ekf.ang_vel[2][0]);
 
@@ -47,6 +122,8 @@ void calculateDesiredVelocityLinear(){
     desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - shuttle->ekf.pos[1][0]);
     desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - shuttle->ekf.pos[2][0]);*/
 
+
+    //REFAZER ESte COntrolador, etsa mal
     desiredVelocityLinear.x = kp_velocity*(desiredPosition.x  - target->ekf.pos[0][0]) + ki_velocity*((desiredPosition.x  - target->ekf.pos[0][0]) - target->ekf.vel[0][0]) ;
     desiredVelocityLinear.y = kp_velocity*(desiredPosition.y  - target->ekf.pos[1][0]) + ki_velocity*((desiredPosition.y  - target->ekf.pos[1][0]) - target->ekf.vel[1][0]) ;
     desiredVelocityLinear.z = kp_velocity*(desiredPosition.z  - target->ekf.pos[2][0]) + ki_velocity*((desiredPosition.z  - target->ekf.pos[2][0]) - target->ekf.vel[2][0]) ;
@@ -110,8 +187,11 @@ void sendAttitudeSetPoint(ros::Publisher pub, double att_euler[3][1]){
 	tf2::Quaternion q_tf; q_tf.setRPY(att_enu[0][0],att_enu[1][0],att_enu[2][0]); q_msg = tf2::toMsg(q_tf);
 	
 	
+    msg.thrust = 9;
 	msg.orientation = q_msg;
 
+
+    msg.type_mask = 1 | 2 | 4 ;
 	pub.publish(msg);
     
          
@@ -119,18 +199,247 @@ void sendAttitudeSetPoint(ros::Publisher pub, double att_euler[3][1]){
 }     
 
 
-void pathFollowingController(){
-	
+double saturation(double angle, double angle_limit){
+    if(angle >= angle_limit)
+        return angle_limit;
+    else{
+        if(angle <= -angle_limit)
+            return -angle_limit;
+        else return angle;
+    } 
+}
+
+
+void pathFollowingController(ros::Publisher pub){
+	// gammac, phic, psid - v, psi, psiD1
+
+    double v = sqrt( pow(target->ekf.vel[0][0], 2) + pow(target->ekf.vel[1][0], 2) + pow(target->ekf.vel[2][0], 2) );
+   
+    double gammac = -saturation(asin(u[2]/v), gamma_limit);
+   
+   
+    double psid = atan2(u[1],u[0]);
+    while( abs(psid - psidPrevious) > (3*M_PI/2)){
+        if( (psid - psidPrevious) > (3*M_PI/2) )
+            psid = psid - 2*M_PI;
+        else if( (psid - psidPrevious) > -(3*M_PI/2) )  
+                psid = psid + 2*M_PI;        
+    }
+
+    double phic = -saturation(kphi*( psid - target->ekf.att_euler[2][0]), phi_limit);
+                
         
-        
-        
-        
-        
-        
-        //sendAttitudeSetPoint(set_att_pub);
+    
+	double att_enu[3][1];
+    att_enu[0][0]=phic; att_enu[1][0]=gammac; 
+
+    sendAttitudeSetPoint(pub, att_enu);
          
     
 }     
+
+
+
+void complexPathGenerator(int path_type, int path_segment){
+    double v = sqrt( pow(target->ekf.vel[0][0], 2) + pow(target->ekf.vel[1][0], 2) + pow(target->ekf.vel[2][0], 2) );
+	
+    if(path_type == 0){
+        double psi_l = _psi_l[path_segment];
+        double gamma_l = _gamma_l[path_segment];
+
+        /*double cl[3];
+        cl[0] =  paths_c0[path_segment][0];
+        cl[1] =  paths_c0[path_segment][1];
+        cl[2] =  paths_c0[path_segment][2];
+
+        double r[3] = {target->ekf.pos[0][0], target->ekf.pos[1][0], target->ekf.pos[2][0]};
+
+        double n_lon[3] = {-sin(psi_l), cos(psi_l), 0};
+
+        double n_lat[3] = {-cos(psi_l)*sin(gamma_l) , -sin(psi_l)*sin(gamma_l) , -cos(gamma_l)};*/
+
+
+        /*Eigen::MatrixXd cl(3,1);
+		 cl(0,0) = paths_c0[path_segment][0];	
+		 cl(1,0) = paths_c0[path_segment][1];
+		 cl(2,0) = paths_c0[path_segment][2];
+
+        Eigen::MatrixXd r(3,1);
+		 r(0,0) = target->ekf.pos[0][0];	
+		 r(1,0) = target->ekf.pos[1][0];	
+		 r(2,0) = target->ekf.pos[2][0];	
+
+        Eigen::MatrixXd n_lon(3,1);
+		 n_lon(0,0) = -sin(psi_l);	
+		 n_lon(1,0) = cos(psi_l);	
+		 n_lon(2,0) = 0;
+
+        Eigen::MatrixXd n_lat(3,1);
+		 n_lat(0,0) = -cos(psi_l)*sin(gamma_l) ;	
+		 n_lat(1,0) = -sin(psi_l)*sin(gamma_l);	
+		 n_lat(2,0) = -cos(gamma_l);
+
+
+
+        Eigen::MatrixXd u_line(3,1);
+        u_line = -k1_line*(n_lon*(n_lon.transpose()) + n_lat*(n_lat.transpose()))*(r - cl) - k2_line*n_lon.cross(n_lat);
+
+        Eigen::MatrixXd u_normalized(3,1);
+        u_normalized = v*(u_line/(u_line.norm()));
+
+        u[0] = u_normalized(0,0);
+        u[1] = u_normalized(1,0);
+        u[2] = u_normalized(2,0);*/
+
+
+        Eigen::Vector3d cl;
+		 cl(0) = paths_c0[path_segment][0];	
+		 cl(1) = paths_c0[path_segment][1];
+		 cl(2) = paths_c0[path_segment][2];
+        cl = cl.transpose();
+
+        Eigen::Vector3d r;
+		 r(0) = target->ekf.pos[0][0];	
+		 r(1) = target->ekf.pos[1][0];	
+		 r(2) = target->ekf.pos[2][0];	
+        r = r.transpose();
+
+        Eigen::Vector3d n_lon;
+		 n_lon(0) = -sin(psi_l);	
+		 n_lon(1) = cos(psi_l);	
+		 n_lon(2) = 0;
+        n_lon = n_lon.transpose();
+
+        Eigen::Vector3d n_lat;
+		 n_lat(0) = -cos(psi_l)*sin(gamma_l) ;	
+		 n_lat(1) = -sin(psi_l)*sin(gamma_l);	
+		 n_lat(2) = -cos(gamma_l);
+        n_lat = n_lat.transpose();
+
+
+        Eigen::Vector3d u_line;
+        u_line = -k1_line*(n_lon*(n_lon.transpose()) + n_lat*(n_lat.transpose()))*(r - cl) - k2_line*n_lon.cross(n_lat);
+
+        Eigen::Vector3d u_normalized;
+        u_normalized = v*(u_line/(u_line.norm()));
+        
+        u[0] = u_normalized(0);
+        u[1] = u_normalized(1);
+        u[2] = u_normalized(2);
+    }   
+
+    else{
+        double rh_h = _rh_h[path_segment];
+        double lambda_h = _lambda_h[path_segment];
+        double gamma_h = _gamma_h[path_segment];
+        double psi_h = _psi_h[path_segment];
+
+
+        /*Eigen::MatrixXd ch(3,1);
+		 ch(0,0) = paths_c0[path_segment][0];	
+		 ch(1,0) = paths_c0[path_segment][1];
+		 ch(2,0) = paths_c0[path_segment][2];
+
+        Eigen::MatrixXd r(3,1);
+		 r(0,0) = target->ekf.pos[0][0];	
+		 r(1,0) = target->ekf.pos[1][0];	
+		 r(2,0) = target->ekf.pos[2][0];
+
+        Eigen::MatrixXd dalpha_cyl(3,1);
+		 dalpha_cyl(0,0) = 2*(r(0,0) - ch(0,0))/rh_h;	
+		 dalpha_cyl(1,0) = 2*(r(1,0) - ch(1,0))/rh_h;	
+		 dalpha_cyl(2,0) = 0;
+
+        Eigen::MatrixXd dalpha_pl(3,1);
+		 dalpha_pl(0,0) = (tan(gamma_h)/lambda_h)*(-(r(1,0) - ch(1,0)))/( pow((r(0,0) - ch(0,0)),2) + pow((r(1,0) - ch(1,0)),2));	
+		 dalpha_pl(1,0) = (tan(gamma_h)/lambda_h)*(-(r(0,0) - ch(0,0)))/( pow((r(0,0) - ch(0,0)),2) + pow((r(1,0) - ch(1,0)),2));		
+		 dalpha_pl(2,0) = 1/rh_h;
+
+        double alpha_cyl =  pow(((r(0,0) - ch(0,0))/rh_h),2) + pow(((r(1,0) - ch(1,0))/rh_h),2) - 1;
+        double alpha_pl =  pow(((r(2,0) - ch(2,0))/rh_h),2) + (tan(gamma_h)/lambda_h)*((atan((r(1,0) - ch(1,0))/(r(0,0) - ch(0,0)))) - psi_h) ;
+
+
+        Eigen::MatrixXd u_line(3,1);
+        u_line = -k1_orb*(-alpha_cyl*dalpha_cyl + alpha_pl*dalpha_pl) - lambda_h*k2_orb*( dalpha_cyl.cross(dalpha_pl) );//rever isto com o matalab
+
+        Eigen::MatrixXd u_normalized(3,1);
+        u_normalized = v*(u_line/(u_line.norm()));
+
+        u[0] = u_normalized(0,0);
+        u[1] = u_normalized(1,0);
+        u[2] = u_normalized(2,0);*/
+
+        Eigen::Vector3d ch;
+		 ch(0) = paths_c0[path_segment][0];	
+		 ch(1) = paths_c0[path_segment][1];
+		 ch(2) = paths_c0[path_segment][2];
+        ch = ch.transpose();
+
+        Eigen::Vector3d r;
+		 r(0) = target->ekf.pos[0][0];	
+		 r(1) = target->ekf.pos[1][0];	
+		 r(2) = target->ekf.pos[2][0];
+        r = r.transpose();
+
+        Eigen::Vector3d dalpha_cyl;
+		 dalpha_cyl(0) = 2*(r(0,0) - ch(0,0))/rh_h;	
+		 dalpha_cyl(1) = 2*(r(1,0) - ch(1,0))/rh_h;	
+		 dalpha_cyl(2) = 0;
+        dalpha_cyl = dalpha_cyl.transpose();
+
+        Eigen::Vector3d dalpha_pl;
+		 dalpha_pl(0) = (tan(gamma_h)/lambda_h)*(-(r(1,0) - ch(1,0)))/( pow((r(0,0) - ch(0,0)),2) + pow((r(1,0) - ch(1,0)),2));	
+		 dalpha_pl(1) = (tan(gamma_h)/lambda_h)*(-(r(0,0) - ch(0,0)))/( pow((r(0,0) - ch(0,0)),2) + pow((r(1,0) - ch(1,0)),2));		
+		 dalpha_pl(2) = 1/rh_h;
+        dalpha_pl = dalpha_pl.transpose();
+
+        double alpha_cyl =  pow(((r(0,0) - ch(0,0))/rh_h),2) + pow(((r(1,0) - ch(1,0))/rh_h),2) - 1;
+        double alpha_pl =  pow(((r(2,0) - ch(2,0))/rh_h),2) + (tan(gamma_h)/lambda_h)*((atan((r(1,0) - ch(1,0))/(r(0,0) - ch(0,0)))) - psi_h) ;
+
+
+        Eigen::Vector3d u_line;
+        u_line = -k1_orb*(-alpha_cyl*dalpha_cyl + alpha_pl*dalpha_pl) - lambda_h*k2_orb*( dalpha_cyl.cross(dalpha_pl) );//rever isto com o matalab
+
+        Eigen::Vector3d u_normalized;
+        u_normalized = v*(u_line/(u_line.norm()));
+
+        u[0] = u_normalized(0);
+        u[1] = u_normalized(1);
+        u[2] = u_normalized(2);
+    }
+    
+}     
+
+
+
+void complexPathManager(){
+   int number_of_paths =  sizeof(pathsType);
+
+   if(_path_segment != number_of_paths){
+ 
+        double c_n = paths_c0[_path_segment + 1][0];	
+	    double c_e = paths_c0[_path_segment + 1][1];
+	    double c_d = paths_c0[_path_segment + 1][2];
+
+        int path_type_next = pathsType[_path_segment + 1];
+        double distance_to_next_path = sqrt( pow( (c_n -target->ekf.pos[0][0]) , 2) + pow( (c_e -target->ekf.pos[1][0]) , 2) + pow( (c_d -target->ekf.pos[2][0]) , 2)  );
+
+        if(path_type_next == 0){
+            if(distance_to_next_path < proximity_to_next_path)
+                _path_segment++;
+        }
+        else{
+            if(distance_to_next_path < (proximity_to_next_path + _rh_h[_path_segment + 1]))
+                _path_segment++;
+        }
+   }
+
+   int path_type = pathsType[_path_segment];
+   complexPathGenerator(path_type, _path_segment);
+}     
+
+
+
 
 void sendTakeOffCommand(ros::Publisher pub){
 	std_msgs::Header h;
@@ -234,13 +543,18 @@ int main (int argc, char ** argv){
     
     target->start_offboard_mission();
 
-    sendTakeOffCommand(pos_target_pub); //nao esta a funcioanr
+    //sendTakeOffCommand(pos_target_pub); //nao esta a funcioanr
  
-    target->set_pos_yaw(pos, yaw, 10);
+    //target->set_pos_yaw(pos, yaw, 10);
 
     
-    
+    //VERIFICAR REFEENRTIAL RELATIVO DOS DOIS DRONES
 
+
+    //target initial conditions
+    p0[0] = target->ekf.pos[0][0]; p0[1] = target->ekf.pos[1][0]; p0[2] = target->ekf.pos[2][0];
+    psi0 = target->ekf.att_euler[2][0];
+   
     while(ros::ok()){
       
 
@@ -251,17 +565,18 @@ int main (int argc, char ** argv){
 
 
 
-        desiredPosReached(reached_pos_pub);
+        //desiredPosReached(reached_pos_pub);
 
 
         //calculateDesiredVelocityLinear();
 
-        pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
-        target->set_pos_yaw(pos, yaw, 0.01);
+        //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
+        //target->set_pos_yaw(pos, yaw, 0.01);
 
 
         //sendAttitudeSetPoint(set_att_pub);
-
+        complexPathManager();
+        pathFollowingController(set_att_pub);
 
 
 

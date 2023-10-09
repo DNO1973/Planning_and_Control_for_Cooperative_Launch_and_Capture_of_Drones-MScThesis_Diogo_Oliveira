@@ -43,7 +43,7 @@
   };
 
 
-  int pos1_x = 5;
+  int pos1_x = 0;
   int pos1_y = 0;
   int pos1_z = -2;
   
@@ -100,8 +100,10 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Rate rate(10);
  
-  ros::Publisher target_pos_pub = n.advertise<geometry_msgs::Point>("cooperative_planning/shuttleController/desired_local_position", 10);
-  ros::Subscriber reached_pos_sub = n.subscribe("cooperative_planning/shuttleController/reached_target_pos", 10, posReachedCb);
+  ros::Publisher target_pos_pub = n.advertise<geometry_msgs::Point>("cooperative_planning/state_machine/desired_local_position", 10);
+  //ros::Publisher target_pos_pub = n.advertise<geometry_msgs::Point>("cooperative_planning/shuttleController/desired_local_position", 10);
+  ros::Subscriber reached_pos_sub = n.subscribe("cooperative_planning/state_machine/shuttle_reached_desired_position", 10, posReachedCb);
+  //ros::Subscriber reached_pos_sub = n.subscribe("cooperative_planning/shuttleController/reached_target_pos", 10, posReachedCb);
   
   
 

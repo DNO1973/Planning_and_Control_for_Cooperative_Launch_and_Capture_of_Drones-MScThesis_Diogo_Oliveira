@@ -32,7 +32,7 @@ double desiredHeading;
 
 double kp_velocity = 1, ki_velocity = 0, kd_velocity = 0, kp_heading = 1;
 int proximity_radius_shuttle = 1;
-int proximity_radius_target = 15;
+int proximity_radius_target = 10;
 int target_shuttle_vertical_closeness = 6;
 int target_shuttle_horizontal_closeness = 4;
 int verticalDistance = 2;
@@ -54,6 +54,7 @@ double previous_error[3][1];
 
 double Tprev;
 
+int finished_trajectory = 0;
 
 
 //hardcoded trajectory points
@@ -91,25 +92,29 @@ void calculateDesiredVelocityLinear(){//REVER ISTO POSSIVELMENTE ESTA MAL; CONFI
     Tprev = Tatual;
     previous_error[0][0]= e_pX; previous_error[1][0]= e_pY; previous_error[2][0]=e_pZ;
 
-
     desiredVelocityLinear.x = kp_velocity*e_pX + ki_velocity*position_error[0][0] + kd_velocity*e_dX;
     desiredVelocityLinear.y = kp_velocity*e_pY + ki_velocity*position_error[1][0] + kd_velocity*e_dY;
     desiredVelocityLinear.z = kp_velocity*e_pZ + ki_velocity*position_error[2][0] + kd_velocity*e_dZ;
+    
+ 
+
+            
     calculateDesiredHeading();
+
 }
 
 
 void captureStatusResult(ros::Publisher pub){
-    //Develop here capture sensing mechanism, as of now, all captures succeed
+    //Develop here capture sensing mechanism, as of now, all captures fail (msg.data = 0;)
     std_msgs::Int32 msg;
-    msg.data = 1;
+    msg.data = 0;
     pub.publish(msg);
 }
 
 void executeCaptureManeuverCb(const std_msgs::Empty::ConstPtr& msg){
 
     captureMoment = 1;
-
+    //Review capture maneuver, as of now, shuttle's desired position just changes to target's current position
    /* desiredVelocityLinear.x = shuttle->ekf.pos[0][0];
     desiredVelocityLinear.y = shuttle->ekf.pos[1][0];
     desiredVelocityLinear.z = 5;
@@ -127,7 +132,7 @@ void executeCaptureManeuverCb(const std_msgs::Empty::ConstPtr& msg){
 
 void updateDesiredPosCb(const geometry_msgs::Point::ConstPtr& msg){
         //Enviar mensagem configuracao nova posicao
-        //rostopic pub /cooperative_planning/state_machine/shuttleController/desired_local_position geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
+        //rostopic pub /cooperative_planning/state_machine/desired_local_position geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
 
     desiredPosition.x = msg->x;
     desiredPosition.y = msg->y;
@@ -136,7 +141,7 @@ void updateDesiredPosCb(const geometry_msgs::Point::ConstPtr& msg){
 
 void updateDesiredVelCb(const geometry_msgs::Point::ConstPtr& msg){
         //Enviar mensagem configuracao nova velocidade
-        //rostopic pub /cooperative_planning/state_machine/shuttleController/desired_local_velocity geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
+        //rostopic pub /cooperative_planning/state_machine/desired_local_velocity geometry_msgs/Point  '{x: 10.0, y: 10.0, z: 10.0}'
 
    
     desiredVelocityLinear.x = msg->x;
@@ -220,6 +225,12 @@ void targetIsCloseWarning(ros::Publisher pub, double x, double y, double z){
 }     
 
 
+void finishedTrajectoryCb(const std_msgs::Empty::ConstPtr& msg){
+  
+    finished_trajectory = 1;
+}
+
+
 int main (int argc, char ** argv){
     /* Initiate the node */
     ros::init(argc, argv, "offboard_shuttle_follower_controller");
@@ -280,6 +291,7 @@ int main (int argc, char ** argv){
     //hardcoded trajectory points
     shuttle_waiting_point[0][0]=5; shuttle_waiting_point[1][0]=-100; shuttle_waiting_point[2][0]=-22;    
     target_inform_point[0][0]=50; target_inform_point[1][0]=-100; target_inform_point[2][0]=-22;    
+    //target_inform_point[0][0]=15; target_inform_point[1][0]=-100; target_inform_point[2][0]=-22;    
     shuttle_stop_area[0][0]=5; shuttle_stop_area[1][0]=100; shuttle_stop_area[2][0]=-22;    
 
 
@@ -292,16 +304,17 @@ int main (int argc, char ** argv){
     ros::Publisher target_is_close_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/target_is_close", 10);
     ros::Subscriber execute_capture_maneuver_sub = nh->subscribe("cooperative_planning/state_machine/execute_capture_maneuver", 10, executeCaptureManeuverCb);
     ros::Publisher capture_status_pub = nh->advertise<std_msgs::Int32>("cooperative_planning/state_machine/capture_success", 10);
+    ros::Subscriber trajectory_finished_sub = nh->subscribe("/cooperative_planning/state_machine/finished_trajectory", 10, finishedTrajectoryCb);
 
     ros::Rate rate(20.0);
 
-    ROS_WARN("STARTING OFFBOARD VELOCITY CONTROLLER FOR SHUTTLE DRONE ");
+    ROS_WARN("STARTING OFFBOARD VELOCITY CONTROLLER FOR SHUTTLE DRONE BASED ON STATE MACHINE");
     double pos[3][1], vel[3][1];
 	double yaw, t0, t;
 
-    desiredPosition.x = 0.0;
+    desiredPosition.x = 5.0;
     desiredPosition.y = 0.0;
-    desiredPosition.z = -22.0;
+    desiredPosition.z = -3.0;
 
     pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
     //pos[0][0]=0; pos[1][0]=0; pos[2][0]=-3;
@@ -309,24 +322,25 @@ int main (int argc, char ** argv){
     
     shuttle->start_offboard_mission();
 
-    shuttle->set_pos_yaw(pos, yaw, 10);
+    //shuttle->set_pos_yaw(pos, yaw, 10);
 
     
     
-     Tprev = ros::Time::now().toSec();
+    Tprev = ros::Time::now().toSec();
     position_error[0][0]= 0; position_error[1][0]= 0; position_error[2][0]=0;
     previous_error[0][0]= 0; previous_error[1][0]= 0; previous_error[2][0]=0;
 
-    while(ros::ok()){
+    while(ros::ok() && !finished_trajectory){
       
 
 
         //ROS_WARN_STREAM("Current Position" << shuttle->sen.gps.pos[0][0]  << "  " << shuttle->sen.gps.pos[1][0]  << "  " << shuttle->sen.gps.pos[2][0]);
-        ROS_WARN_STREAM("Current Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
-        ROS_WARN_STREAM("Desired Position: " << desiredPosition.x  << "  " << desiredPosition.y  << "  " << desiredPosition.z);
-        ROS_WARN_STREAM("Current Velocity: " << shuttle->ekf.vel[0][0]  << "  " << shuttle->ekf.vel[1][0]  << "  " << shuttle->ekf.vel[2][0]);
-        ROS_WARN_STREAM("Desired Position: " << desiredVelocityLinear.x  << "  " << desiredVelocityLinear.y  << "  " << desiredVelocityLinear.z);
+        ROS_WARN_STREAM("Shuttle Current Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
+        ROS_WARN_STREAM("Shuttle Desired Position: " << desiredPosition.x  << "  " << desiredPosition.y  << "  " << desiredPosition.z);
+        ROS_WARN_STREAM("Shuttle Current Velocity: " << shuttle->ekf.vel[0][0]  << "  " << shuttle->ekf.vel[1][0]  << "  " << shuttle->ekf.vel[2][0]);
+        ROS_WARN_STREAM("Shuttle Desired Velocity: " << desiredVelocityLinear.x  << "  " << desiredVelocityLinear.y  << "  " << desiredVelocityLinear.z);
 
+        ROS_WARN_STREAM("Target Current Position: " << target->ekf.pos[0][0] + referential_relative_to_shuttle_x  << "  " << target->ekf.pos[1][0] + referential_relative_to_shuttle_y << "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z );
 
 
         desiredPosReached(reached_pos_pub);
@@ -359,10 +373,13 @@ int main (int argc, char ** argv){
 
 
 
-
         ros::spinOnce();
         rate.sleep();
     }
+
+
+    shuttle->auto_land();
+
 
     return 0;
 

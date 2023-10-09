@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_cpp
   drone_gimmicks_library
   drone_utils_cpp
+  roslib
 )
 
 
@@ -215,11 +216,79 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
+
+
+find_path(CASADI_INCLUDE_DIR
+  casadi/casadi.hpp
+  HINTS $ENV{CASADI_PREFIX}/include
+)
+
+if(CASADI_INCLUDE_DIR)
+  set(CASADI_INCLUDE_DIR ${CASADI_INCLUDE_DIR} ${CASADI_INCLUDE_DIR}/casadi)
+  set(CASADI_FOUND_INCLUDE TRUE)
+  message(STATUS "Found CasADi include dir: ${CASADI_INCLUDE_DIR}")
+else()
+  message(STATUS "Could not find CasADi include dir")
+endif()
+
+find_library(CASADI_LIBRARY
+    NAMES casadi
+    HINTS ${CASADI_INCLUDE_DIR}/../lib $ENV{CASADI_PREFIX}/lib)
+if(CASADI_LIBRARY)
+    set(CASADI_LIBRARIES ${CASADI_LIBRARIES} ${CASADI_LIBRARY})
+endif()
+
+if(CASADI_LIBRARIES)
+  message(STATUS "Found CasADi libs: ${CASADI_LIBRARIES}")
+else()
+  message(STATUS "Could not find CasADi libs")
+endif()
+
+if(CASADI_FOUND_INCLUDE AND CASADI_LIBRARIES)
+  set(CASADI_FOUND TRUE)
+endif()
+
+
+
+
+
+
+
+
+
+
+
+####
+
+
+
+
+
+
+
+
+
+####
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 add_executable(offboard_example src/offboard_example.cpp)
 target_link_libraries(offboard_example ${catkin_LIBRARIES})
 
-add_executable(test2drones src/test2drones.cpp)
-target_link_libraries(test2drones ${catkin_LIBRARIES})
 
 add_executable(offboard_shuttle_vel_control src/offboard_shuttle_vel_control.cpp)
 target_link_libraries(offboard_shuttle_vel_control ${catkin_LIBRARIES})
@@ -241,6 +310,36 @@ target_link_libraries(offboard_shuttle_follower_controller ${catkin_LIBRARIES})
 
 add_executable(offboard_shuttle_follower_2shuttles src/offboard_shuttle_follower_2shuttles.cpp)
 target_link_libraries(offboard_shuttle_follower_2shuttles ${catkin_LIBRARIES})
+
+
+add_executable(field_test_offboard_shuttle_follower_controller_virtual_target src/field_test_offboard_shuttle_follower_controller_virtual_target.cpp)
+target_link_libraries(field_test_offboard_shuttle_follower_controller_virtual_target ${catkin_LIBRARIES})
+
+
+add_executable(field_test_offboard_shuttle_vel_control src/field_test_offboard_shuttle_vel_control.cpp)
+target_link_libraries(field_test_offboard_shuttle_vel_control ${catkin_LIBRARIES})
+
+add_executable(field_test_send_shuttle_target_pos src/field_test_send_shuttle_target_pos.cpp)
+target_link_libraries(field_test_send_shuttle_target_pos ${catkin_LIBRARIES})
+
+
+
+
+add_executable(offboard_shuttle_follower_mpc_controller src/offboard_shuttle_follower_mpc_controller.cpp)
+target_link_libraries(offboard_shuttle_follower_mpc_controller ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
+
+add_executable(example_use_nlp_external src/example_use_nlp_external.cpp)
+target_link_libraries(example_use_nlp_external ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
+
+add_executable(example_code_gen src/example_code_gen.cpp)
+target_link_libraries(example_code_gen ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
+
+add_executable(offboard_shuttle_follower_mpc_2shuttles src/offboard_shuttle_follower_mpc_2shuttles.cpp)
+target_link_libraries(offboard_shuttle_follower_mpc_2shuttles ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
+
+
+
+
 
 add_compile_options(-std=c++17 -Wall -O3) 
 

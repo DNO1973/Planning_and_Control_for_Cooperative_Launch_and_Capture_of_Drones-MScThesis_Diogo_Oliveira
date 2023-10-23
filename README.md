@@ -1,5 +1,10 @@
 # MScThesis_Diogo-Oliveira
 
+Para correr a simulação do mps:
+* todos os ficheiros que são precisos estão na pasta mpc_simulation
+* fazer import do casadi na directoria correta com o addpath()
+* todo o codigo de interesse a mudar está no ficheiro mpc_setup.m, nas secções com titulo em comentario de "controller parameters", " Dynamic constraints of the multiple shooting" e "Optimal control problem using multiple-shooting".
+
 Para correr a simulação do fixed wing com os exemplos de trajetórias:
 
 * configurar e correr o set_param_fixed_complex.m

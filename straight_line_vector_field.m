@@ -28,7 +28,7 @@ n_lon = [ -sin(psi_l) ; cos(psi_l) ; 0 ];
 n_lat = [-cos(psi_l)*sin(gamma_l) ; -sin(psi_l)*sin(gamma_l) ; -cos(gamma_l) ];
 
 k1 = 1;
-k2 = 1;
+k2 = 10;
 
 %u_line = k1*(n_lon*transpose(n_lon) +  n_lat*transpose(n_lat))*(r - cl) + k2*cross(n_lon,n_lat);
 u_line = - k1*(n_lon*n_lon' +  n_lat*n_lat')*(r - cl) - k2*cross(n_lon,n_lat);

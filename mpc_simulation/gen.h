@@ -30,8 +30,8 @@ extern "C" const char* F_name_out(casadi_int i);
 extern "C" const casadi_int* F_sparsity_in(casadi_int i);
 extern "C" const casadi_int* F_sparsity_out(casadi_int i);
 extern "C" int F_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w);
-#define F_SZ_ARG 143
-#define F_SZ_RES 88
-#define F_SZ_IW 4640
-#define F_SZ_W 77127
+#define F_SZ_ARG 145
+#define F_SZ_RES 138
+#define F_SZ_IW 5140
+#define F_SZ_W 83049
 extern "C" casadi_functions* F_functions(void);

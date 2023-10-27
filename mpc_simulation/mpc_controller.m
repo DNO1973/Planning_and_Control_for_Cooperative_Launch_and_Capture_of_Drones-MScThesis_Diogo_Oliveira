@@ -1,6 +1,6 @@
 function [control_action,x_seq_next,u_seq_next] = mpc_controller(current_state,P,x_seq_prev,u_seq_prev, mpc_external_function)
 
-        use_external_function = 0;
+        use_external_function = 1;
         
         if ~use_external_function
 
@@ -18,12 +18,14 @@ function [control_action,x_seq_next,u_seq_next] = mpc_controller(current_state,P
         
         else
             
-            x_seq_next = x_seq_prev;
-            u_seq_next = u_seq_prev;
-            
-            [u_seq, x_seq] = mpc_external_function(current_state);
+      
+            [u_seq, x_seq] = mpc_external_function(current_state,u_seq_prev,x_seq_prev);
             control_action = [P.m*u_seq(1:3,1) - P.m*P.g*[0;0;1];u_seq(4,1)];
         
+            
+            x_seq_next = x_seq;
+            u_seq_next = u_seq;
+            
         end
 end
 

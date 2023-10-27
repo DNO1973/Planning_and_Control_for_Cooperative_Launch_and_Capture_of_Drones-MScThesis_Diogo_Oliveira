@@ -36,7 +36,7 @@ f_cont = Function('f_cont',{xx,uu},{xdot},{'x','u'},{'ode'}); % last two represe
 % controller parameters
 Param.T = 5; % Time horizon
 Param.N = 25; % Number of control intervals
-Param.Q = blkdiag(6,6,5,2,2,2,1)*10;
+Param.Q = blkdiag(6,6,6,2,2,2,1)*10;
 Param.R = blkdiag(1,1,1,1)*10;
 Param.S = blkdiag(1,1)*10;
 %Param.S = blkdiag(1,1,1)*10;

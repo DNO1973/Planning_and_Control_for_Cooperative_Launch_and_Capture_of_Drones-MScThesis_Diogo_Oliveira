@@ -95,7 +95,7 @@ current_path_segments = [];
 mpc_time_delay = [];
 
 target_reached_inform_point = 0;
-inform_point = [50;20;-10];
+inform_point = [180;20;-10];
 
 
 t(1) = t0;
@@ -174,22 +174,22 @@ hold off;
 
 
      figure(2);
-     plot(1:sim_time/Ts + 1, shuttle_states(1:3,:), '-');
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(1:3,:), '-');
     
      hold on;
      title('Shuttle and Target Positions');
       
-     plot(1:sim_time/Ts + 1, target_states(1:3,:), '--');
+     plot(Ts*(1:sim_time/Ts + 1), target_states(1:3,:), '--');
      legend('x_{shuttle}','y_{shuttle}','z_{shuttle}','x_{target}','y_{target}','z_{target}','Interpreter','tex');  
     
  hold off;
  
  hold off;
      figure(3);
-     plot(1:sim_time/Ts + 1, shuttle_states(4,:), '-');
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(4,:), '-');
      hold on;
      title('Shuttle and Target Yaw');
-     plot(1:sim_time/Ts + 1, target_states(4,:), '--');
+     plot(Ts*(1:sim_time/Ts + 1), target_states(4,:), '--');
      legend('psi_{shuttle}','psi_{target}');  
     
 
@@ -197,7 +197,7 @@ hold off;
  
  hold off;
      figure(4);
-     plot(1:sim_time/Ts + 1, shuttle_states(4:6,:), '-');
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(4:6,:), '-');
      hold on;
      title('Shuttle Velocity ');
      legend('v_x','v_y','v_z');
@@ -209,7 +209,7 @@ hold off;
   figure(5);
   
     error = vecnorm(shuttle_states(1:3,:) - target_states(1:3,:));
-     plot(1:sim_time/Ts + 1, error, '-');
+     plot(Ts*(1:sim_time/Ts + 1), error, '-');
     
      hold on;
      title('ponto de contacto');
@@ -218,15 +218,49 @@ hold off;
      %legend('x_{shuttle}','y_{shuttle}','z_{shuttle}','x_{target}','y_{target}','z_{target}','Interpreter','tex');  
     
  hold off;
-%   figure(6);
-%   
-%     %error = vecnorm(shuttle_states(1:3,:) - target_states(1:3,:));
-%      plot(1:sim_time/Ts , mpc_time_delay);
-%     
-%      hold on;
-%      title('Shasditions');
-%       
-%      %plot(1:sim_time/T + 1, target_states(1:3,:), '--');
-%      %legend('x_{shuttle}','y_{shuttle}','z_{shuttle}','x_{target}','y_{target}','z_{target}','Interpreter','tex');  
-%     
-%  hold off;
+  figure(6);
+  
+    %error = vecnorm(shuttle_states(1:3,:) - target_states(1:3,:));
+     plot(Ts*(1:size(mpc_time_delay,2)) , mpc_time_delay);
+  %  1:sim_time/Ts
+     hold on;
+     title('Shasditions');
+      
+     %plot(1:sim_time/T + 1, target_states(1:3,:), '--');
+     %legend('x_{shuttle}','y_{shuttle}','z_{shuttle}','x_{target}','y_{target}','z_{target}','Interpreter','tex');  
+    
+ hold off;
+ 
+ if 0
+ 
+      figure(111);
+    curve = animatedline('LineWidth',2,'Color','#D95319');
+    curve2 = animatedline('LineWidth',1,'Color','#0072BD');
+    %set(gca,'XLim',[-1.5 1.5],'YLim',[-1.5 1.5],'ZLim',[0 10]);
+    view(43,24);
+     set(gca, 'Zdir', 'reverse');
+      grid on;
+     axis equal;
+     %axis([-60 610 -50 230 -20 0]); %full view
+     axis([190 230 -50 50 -20 0]); %capture maneuver
+     title('Target and Shuttle Positions');
+     xlabel('x[m]'); ylabel('y[m]'); zlabel('-z[m]');
+    % legend('Target', 'Shuttle');
+    hold on;
+    for i = 1:size(target_states(1,:),2)
+       addpoints(curve2,target_states(1,i),target_states(2,i),target_states(3,i));
+        head2 = scatter3(target_states(1,i),target_states(2,i),target_states(3,i),'filled','MarkerFaceColor','b');
+         addpoints(curve,shuttle_states(1,i),shuttle_states(2,i),shuttle_states(3,i));
+        head = scatter3(shuttle_states(1,i),shuttle_states(2,i),shuttle_states(3,i),'filled','MarkerFaceColor','b');
+
+        drawnow
+        pause(0.001);
+        delete(head);
+        delete(head2);
+    end
+ end
+
+hold off;
+
+
+

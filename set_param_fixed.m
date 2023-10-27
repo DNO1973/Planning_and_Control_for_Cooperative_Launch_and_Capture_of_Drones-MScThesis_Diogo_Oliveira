@@ -9,7 +9,7 @@ kphi_line = 10;
 V_line = 9;
 
 %reference straight line
-c0_line = [50;20;20];
+c0_line = [-50;20;-20];
 psi_l_line =0;  %desired heading angle
 gamma_l_line = 0; %desired flight path angle
 
@@ -35,7 +35,7 @@ ParamFixLine.gamma_l = gamma_l_line;
 
  Rh_orb = 50;
  lambda_orb = 1;
- gamma_h_orb = -0.1;% 15*pi/180;
+ gamma_h_orb = pi/18;% 15*pi/180;
  psi_h_orb = 0;
  
 k1_orb = 1;
@@ -46,10 +46,13 @@ ch_orb = [10; 0; 0];
 
 p0_orb = [0.1;0;0];                                                         %start position on center of helix
 p0_orb = ch_orb + [Rh_orb*cos(psi_h_orb) ; Rh_orb*sin(psi_h_orb) ; 0];     %start position on helix
+
+p0_orb = [80; -5; 0] %para testes
+
 psi0_orb = pi/2;
 
-gamma_limit_orb = pi/3;
-phi_limit_orb = pi/3;
+gamma_limit_orb = pi/6;
+phi_limit_orb = pi/6;
 kphi_orb = 1;
 
 V_orb = 9;

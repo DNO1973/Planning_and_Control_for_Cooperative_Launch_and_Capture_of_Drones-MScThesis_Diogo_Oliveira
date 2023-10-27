@@ -5,7 +5,9 @@ clear
 Ts = 0.01;
 proximity_to_next_path = 10;
 % initial uav conditions 
-p0_line = [0;0;0];
+p0_line = [20;-20;-10];
+%p0_line = [0;0;0];
+p0_line = [250;50;0];
 psi0_line = 0 ;
 
 gamma_limit_line = pi/6;
@@ -17,10 +19,10 @@ k2_line = 10;
 k1_orb = 1;
 k2_orb = 10;
 
-V_line = 9;
+V_line = 11;
 
 %escolher o path
-path = 1; %0 - quadrado, 1 - dubins , 2 - oito, 3 - duas orbits verticais
+path = 1; %0 - square, 1 - dubins , 2 - eight figure, 3 - two vertical orbits
 
 
 %definicao dos paths a seguir hardcoded, definir cada um deles e ter
@@ -28,24 +30,24 @@ path = 1; %0 - quadrado, 1 - dubins , 2 - oito, 3 - duas orbits verticais
 
 if(path == 0)
     %reference straight line 1
-    c0_line1 = [0;0;0];
+    c0_line1 = [10;0;-10];
     psi_l_line1 =0;  %desired heading angle
     gamma_l_line1 = 0; %desired flight path angle
 
 
     %reference straight line 2
-    c0_line2 = [250;0;0];
+    c0_line2 = [250;0;-10];
     psi_l_line2 =pi/2;  %desired heading angle
     gamma_l_line2 = 0; %desired flight path angle
 
     %reference straight line 3
-    c0_line3 = [250;250;0];
+    c0_line3 = [250;250;-10];
     psi_l_line3 = pi;  %desired heading angle
     gamma_l_line3 = 0; %desired flight path angle
 
 
      %reference straight line 4
-    c0_line4 = [0;250;0];
+    c0_line4 = [0;250;-10];
     psi_l_line4 = 3*pi/2;  %desired heading angle
     gamma_l_line4 = 0; %desired flight path angle
 
@@ -100,8 +102,13 @@ end
 if(path == 1)
      %dubins path
 
+%     %segment line 1
+%     c0_line1 = [50;20;-10];
+%     psi_l_line1 = 0;  %desired heading angle
+%     gamma_l_line1 = 0; %desired flight path angle
+
     %segment line 1
-    c0_line1 = [50;20;20];
+    c0_line1 = [350;20;-10];
     psi_l_line1 = 0;  %desired heading angle
     gamma_l_line1 = 0; %desired flight path angle
 
@@ -112,10 +119,10 @@ if(path == 1)
      lambda_orb2 = 1;
      gamma_h_orb2 = 0;
      psi_h_orb2 = 3*pi/2;
-     ch_orb2 = [500; 120; 20];
+     ch_orb2 = [500; 120; -10];
 
      %segment line 3
-    c0_line3 = [500;220;20];
+    c0_line3 = [500;220;-10];
     psi_l_line3 = pi;  %desired heading angle
     gamma_l_line3 = 0; %desired flight path angle
 
@@ -126,14 +133,18 @@ if(path == 1)
      lambda_orb4 = 1;
      gamma_h_orb4 = 0;
      psi_h_orb4 = pi/2;
-     ch_orb4 = [50; 120; 20];
+     ch_orb4 = [50; 120; -10];
 
 
     %segment line 5
-    c0_line5 = [50;20;20];
-    psi_l_line5 = -pi/2;  %desired heading angle
+    c0_line5 = [50;20;-10];
+    psi_l_line5 = 0;  %desired heading angle
     gamma_l_line5 = 0; %desired flight path angle
 
+    %segment line 5
+    c0_line6 = [240;20;-10];
+    psi_l_line6 = 0;  %desired heading angle
+    gamma_l_line6 = 0; %desired flight path angle
 
 
     % put parameters into structure
@@ -154,30 +165,31 @@ if(path == 1)
 
     ParamFixComplex.V = V_line;
 
-    ParamFixComplex.paths = [0, 1, 0, 1, 0]; %0 - straight, 1 - orbit
+    ParamFixComplex.paths = [0, 1, 0, 1, 0, 0]; %0 - straight, 1 - orbit
 
 
 
 
     %path reference params
 
-    ParamFixComplex.c0 = [c0_line1, ch_orb2, c0_line3, ch_orb4, c0_line5];
+    ParamFixComplex.c0 = [c0_line1, ch_orb2, c0_line3, ch_orb4, c0_line5,c0_line6];
 
     %straight reference arrays
 
-    ParamFixComplex.psi_l = [psi_l_line1, 0, psi_l_line3, 0, psi_l_line5];
-    ParamFixComplex.gamma_l = [gamma_l_line1, 0, gamma_l_line3, 0, gamma_l_line5];
+    ParamFixComplex.psi_l = [psi_l_line1, 0, psi_l_line3, 0, psi_l_line5, psi_l_line6];
+    ParamFixComplex.gamma_l = [gamma_l_line1, 0, gamma_l_line3, 0, gamma_l_line5,gamma_l_line6];
 
 
     %orbit reference arrays
 
 
-    ParamFixComplex.Rh = [0,Rh_orb2,0,Rh_orb4,0];
-    ParamFixComplex.lambda = [0,lambda_orb2,0,lambda_orb4,0];
-    ParamFixComplex.gamma_h = [0,gamma_h_orb2,0,gamma_h_orb4,0];
-    ParamFixComplex.psi_h = [0,psi_h_orb2,0,psi_h_orb4,0];
+    ParamFixComplex.Rh = [0,Rh_orb2,0,Rh_orb4,0,0];
+    ParamFixComplex.lambda = [0,lambda_orb2,0,lambda_orb4,0,0];
+    ParamFixComplex.gamma_h = [0,gamma_h_orb2,0,gamma_h_orb4,0,0];
+    ParamFixComplex.psi_h = [0,psi_h_orb2,0,psi_h_orb4,0,0];
 
 end
+
 
 if(path == 2)
 

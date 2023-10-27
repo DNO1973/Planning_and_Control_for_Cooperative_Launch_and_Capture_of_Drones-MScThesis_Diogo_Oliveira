@@ -207,7 +207,9 @@ number_of_segments = number_of_segments(2);
     end
 
 
-    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3),'Color',sstblue);
+    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3),'-','Color',sstblue);
+    plot3(out.fixcomplexout.Data(1:1000:end,1), out.fixcomplexout.Data(1:1000:end,2), out.fixcomplexout.Data(1:1000:end,3),'o','Color',sstblue);
+   
     hold on; 
    % plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
    % plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
@@ -305,8 +307,26 @@ plot3(out.quadout.Data(1,1), out.quadout.Data(1,2), out.quadout.Data(1,3),'o','C
 plot3(out.quadout.Data(end,1), out.quadout.Data(end,2), out.quadout.Data(end,3),'x','Color',sstgray,'MarkerSize',8);
 
 plot3(out.quadout.Data(:,1), out.quadout.Data(:,2), out.quadout.Data(:,3),'-');
+plot3(out.quadout.Data(1:1000:end,1), out.quadout.Data(1:1000:end,2), out.quadout.Data(1:1000:end,3),'o');
+
 
 hold off;
 
 
- 
+
+
+
+
+
+
+
+     figure(2);
+     plot(out.fixcomplexout.Time, out.fixcomplexout.Data(:,1:3), '--');
+     hold on;
+     legend('x','y','z');
+     plot(out.quadout.Time, out.quadout.Data(:,1:3));
+     legend('x','y','z','x1','y2','z3');
+     
+    
+
+ hold off;

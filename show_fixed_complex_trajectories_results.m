@@ -1,4 +1,4 @@
-
+ 
 sstblue         = [0,128,255]/255;
 sstlightblue    = [48,208,216]/255;
 sstlighterblue  = [50,220,240]/255;
@@ -77,7 +77,7 @@ number_of_segments = number_of_segments(2);
                  r =cl+ ql*path_lenght;
                  % r =cl+ ql*1000;
 
-                 plot3( r(1,:), r(2,:),  r(3,:), '--','Color','r');
+                 plot3( r(1,:), r(2,:),  r(3,:), '-','Color','#0072BD');
 
                  hold on;
             
@@ -96,7 +96,7 @@ number_of_segments = number_of_segments(2);
                   path_lenght = 1:500;
                   r =cl+ ql*path_lenght;
 
-                 plot3( r(1,:), r(2,:),  r(3,:), '--','Color','r');
+                 plot3( r(1,:), r(2,:),  r(3,:), '-','Color','#0072BD');
 
                  hold on;
              
@@ -162,7 +162,7 @@ number_of_segments = number_of_segments(2);
 %                   plot3(r(1,:), r(2,:), r(3,:), '--','Color','r');
                  
 
-                path_lenght = 1:0.01:10;
+                path_lenght = -0.1:0.01:10;
                   r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
                   n = size(path_lenght,2);
                 
@@ -176,7 +176,7 @@ number_of_segments = number_of_segments(2);
                  
                  rf = r(:,1:auxPoint);
                    
-                  plot3(rf(1,:), rf(2,:), rf(3,:), '--','Color','r');
+                  plot3(rf(1,:), rf(2,:), rf(3,:), '-','Color','#0072BD');
                     hold on;
                   %plot3(rf(1,1), rf(2,1), rf(3,1),'o','Color',sstgreen,'MarkerSize',10);
                  % plot3(rf(1,end), rf(2,end), rf(3,end),'x','Color',sstgray,'MarkerSize',10);
@@ -199,7 +199,7 @@ number_of_segments = number_of_segments(2);
                  r = ch + [Rh*cos(lambda*path_lenght + psi_h) ; Rh*sin(lambda*path_lenght + psi_h) ; -path_lenght*Rh*tan(gamma_h)];
 
 
-                plot3(r(1,:), r(2,:), r(3,:), '--','Color','r'); 
+                plot3(r(1,:), r(2,:), r(3,:), '-','Color','#0072BD'); 
 
                 hold on;
             end
@@ -207,26 +207,31 @@ number_of_segments = number_of_segments(2);
     end
 
 
-    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3),'Color',sstblue);
+    plot3(out.fixcomplexout.Data(:,1), out.fixcomplexout.Data(:,2), out.fixcomplexout.Data(:,3), '--','Color','#D95319');
     hold on; 
    % plot3(r(1,1), r(2,1), r(3,1),'o','Color',sstgreen,'MarkerSize',10);
    % plot3(r(1,end), r(2,end), r(3,end),'x','Color',sstgray,'MarkerSize',10);
     
-    plot3(out.fixcomplexout.Data(1,1), out.fixcomplexout.Data(1,2), out.fixcomplexout.Data(1,3),'o','Color',sstblue,'MarkerSize',8);
-    plot3(out.fixcomplexout.Data(end,1), out.fixcomplexout.Data(end,2), out.fixcomplexout.Data(end,3),'x','Color',sstblue,'MarkerSize',8);
+    plot3(out.fixcomplexout.Data(1,1), out.fixcomplexout.Data(1,2), out.fixcomplexout.Data(1,3),'o','Color','#D95319','MarkerSize',8);
+   % plot3(out.fixcomplexout.Data(end,1), out.fixcomplexout.Data(end,2), out.fixcomplexout.Data(end,3),'x','Color',sstblue,'MarkerSize',8);
 
     
 
      grid on;
     axis equal;
-    axis([-50 500 -50 100 -50 500]);
-  
-    xlabel('x [m]');
-    ylabel('y [m]');
-    zlabel('z [m]');
+    %axis([-50 500 -50 100 -50 500]);
+  axis([-100 600 -100 250 -100 500]);
 
+  plot3(350, 20, -10,'o','Color','#0072BD','MarkerSize',8); 
+  view(0, 90);
+    xlabel('north [m]');
+    ylabel('east [m]');
+    zlabel('-down [m]');
+set(gca, 'Zdir', 'reverse');
    
-    
+    title('Dubins Path Following');
+  legend('Reference Path','','','','','','Target Drone Trajectory','Target Drone Start Position','Reference Start Position');
+   
     hold off;
     
 %     

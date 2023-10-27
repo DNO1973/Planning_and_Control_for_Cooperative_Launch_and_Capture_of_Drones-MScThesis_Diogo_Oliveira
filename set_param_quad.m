@@ -3,7 +3,7 @@
 %kp=5; kv=10;
 kp=10; kv=25;
 
-m = 4; %mass
+m = 5; %mass
 
 % initial conditions
 p0 = [-50;25;-40];

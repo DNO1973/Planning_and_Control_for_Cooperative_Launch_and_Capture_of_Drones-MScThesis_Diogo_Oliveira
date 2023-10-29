@@ -95,7 +95,7 @@ current_path_segments = [];
 mpc_time_delay = [];
 
 target_reached_inform_point = 0;
-inform_point = [180;20;-10];
+inform_point = [160;20;-10];
 
 
 t(1) = t0;
@@ -231,7 +231,7 @@ hold off;
     
  hold off;
  
- if 0
+ if 1
  
       figure(111);
     curve = animatedline('LineWidth',2,'Color','#D95319');
@@ -242,7 +242,7 @@ hold off;
       grid on;
      axis equal;
      %axis([-60 610 -50 230 -20 0]); %full view
-     axis([190 230 -50 50 -20 0]); %capture maneuver
+     axis([190 250 -50 50 -20 0]); %capture maneuver
      title('Target and Shuttle Positions');
      xlabel('x[m]'); ylabel('y[m]'); zlabel('-z[m]');
     % legend('Target', 'Shuttle');

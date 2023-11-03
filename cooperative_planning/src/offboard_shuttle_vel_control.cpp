@@ -39,7 +39,7 @@ double previous_error[3][1];
 
 double Tprev;
 
-
+double shuttle_stop_area[3][2];
 
 
 void calculateDesiredHeading(){
@@ -205,6 +205,13 @@ int main (int argc, char ** argv){
 
         //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;
         //shuttle->set_pos_yaw(pos, yaw, 0.01);
+
+        shuttle_stop_area[0][0]=-93; shuttle_stop_area[1][0]=15; shuttle_stop_area[2][0]=-25;    
+        shuttle_stop_area[0][1]=-70; shuttle_stop_area[1][1]=100; shuttle_stop_area[2][1]=-25;    
+
+   if(shuttle->ekf.pos[1][0] >= ( (( shuttle_stop_area[1][1] - shuttle_stop_area[1][0])/ (shuttle_stop_area[0][1] - shuttle_stop_area[0][0]))* (shuttle->ekf.pos[0][0] - shuttle_stop_area[0][0]) + shuttle_stop_area[1][0])) 
+        ROS_WARN_STREAM("STOP STOPST PSTOPST STOPST OSPTOP ");
+
 
 
 

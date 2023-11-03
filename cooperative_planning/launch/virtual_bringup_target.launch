@@ -1,27 +1,10 @@
 <?xml version="1.0"?>
 <launch>
        
-    <!-- Shuttle -->
-   <!-- Vehicle Model -->
-  <arg name="nameShuttle" default="iris"/>
-  <arg name="IDShuttle" default="0" />
-
-  <!-- Vehicle's initial pose in ENU -->
-  <arg name="xShuttle"     default="0.0"/>
-  <arg name="yShuttle"     default="0.0"/>
-  <arg name="zShuttle"     default="0.0"/>
-  <arg name="rollShuttle"  default="0.0"/>
-  <arg name="pitchShuttle" default="0.0"/>
-  <arg name="yawShuttle"   default="0.0"/>
-
-  <!-- PX4 Configurations -->
-  <arg name="px4_configShuttle" default="rcS"/>
-  <arg name="px4_name_configShuttle" default="iris"/>
-
   <!-- Target -->
   <!-- Vehicle Model -->
   <arg name="nameTarget" default="iris"/>
-  <arg name="IDTarget" default="0" />
+  <arg name="IDTarget" default="1" />
 
   <!-- Vehicle's initial pose in ENU -->
   <arg name="xTarget"     default="0.0"/>
@@ -76,10 +59,10 @@
     <!-- MAVROS Configurations -->
     <include file="$(find mavros)/launch/px4.launch">
       <arg name="fcu_url" value="udp://:$(arg ip_name)@localhost:$(arg ip_port)"/>
-      <arg name="gcs_url" value="udp://@192.168.50.199:15005"/>
+      <arg name="gcs_url" value="udp://@192.168.1.11:15001"/>
       <arg name="tgt_system" value="$(eval 1 + arg('IDTarget'))"/>
       <arg name="tgt_component" value="1"/>
-    </include>
+    </include> 
 
      
 

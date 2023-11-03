@@ -427,12 +427,12 @@ int main (int argc, char ** argv){
 
 
 
-    //hardcoded trajectory points
-    shuttle_waiting_point[0][0]=5; shuttle_waiting_point[1][0]=-35; shuttle_waiting_point[2][0]=-22;    
-    target_inform_point[0][0]=5; target_inform_point[1][0]=-120; target_inform_point[2][0]=-22;    
-    //target_inform_point[0][0]=50; target_inform_point[1][0]=-100; target_inform_point[2][0]=-22;    
-    //target_inform_point[0][0]=15; target_inform_point[1][0]=-100; target_inform_point[2][0]=-22;    
-    shuttle_stop_area[0][0]=5; shuttle_stop_area[1][0]=100; shuttle_stop_area[2][0]=-22;    
+     //hardcoded trajectory points
+    shuttle_waiting_point[0][0]=0; shuttle_waiting_point[1][0]=0; shuttle_waiting_point[2][0]=-25;    
+    target_inform_point[0][0]=40; target_inform_point[1][0]=-15; target_inform_point[2][0]=-25;    
+    //target_inform_point[0][0]=100; target_inform_point[1][0]=25; target_inform_point[2][0]=-25;    
+    shuttle_stop_area[0][0]=-90; shuttle_stop_area[1][0]=37.33; shuttle_stop_area[2][0]=-25;    
+
 
 
 

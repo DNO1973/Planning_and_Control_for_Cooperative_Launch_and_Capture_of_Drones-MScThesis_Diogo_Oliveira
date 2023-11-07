@@ -112,16 +112,20 @@ shuttle_states = []; %states in mpc, with shuttle and target dynamics
 shuttle_states(:,1) = [p_shuttle;v_shuttle;psi_shuttle;[xt(1);xt(2);xt(3)]; [0;0;0]; xt(4)];
 %shuttle_states(:,1) = [p_shuttle(1),p_shuttle(2),p_shuttle(3),v_shuttle(1),v_shuttle(2),v_shuttle(3),psi_shuttle,xt(1),xt(2),xt(3), 0;0;0, xt(4)];
 
+aux = 0 ;
+aux1= 0;
 main_loop = tic;
 while (k < sim_time/Ts +1)
     
     
     
     
-    
+    if aux > 25
+        aux1 = 1;
+    end
     if target_reached_inform_point
         mpc_tic = tic;
-        [u_shuttle,x_MPC,u_MPC] = mpc_controller(shuttle_states(:,k),Param,x_MPC,u_MPC, mpc_external_function);
+        [u_shuttle,x_MPC,u_MPC] = mpc_controller(shuttle_states(:,k),Param,x_MPC,u_MPC, mpc_external_function,aux1);
         %u_shuttle = 0;
         mpc_toc = toc(mpc_tic);
         mpc_time_delay= horzcat(mpc_time_delay, mpc_toc);
@@ -133,7 +137,9 @@ while (k < sim_time/Ts +1)
     
     [path_segment, path_type]  = complex_path_manager(target_states(1:3,k),  ParamFixComplex, current_path_segments);
     
-    [t0, xt, xs] = apply_controls(Ts, t0, f_target, xt,f_shuttle,shuttle_states(:,k),u_shuttle(:,1), ParamFixComplex, path_segment, path_type); % get the initialization of the next optimization step
+    
+  
+    [t0, xt, xs] = apply_controls(Ts, t0, f_target, xt,f_shuttle,shuttle_states(:,k),u_shuttle(:,1), ParamFixComplex, path_segment, path_type ); % get the initialization of the next optimization step
                                                                           %apply control action to the system
                                                                         %discretizacao/avancar o tempo
     target_states(:,k+1) = xt;
@@ -145,6 +151,10 @@ while (k < sim_time/Ts +1)
     if  (sqrt((inform_point(1) - xt(1))^2 + (inform_point(2) - xt(2))^2)) < 5 
         target_reached_inform_point = 1;
     end
+    
+    if abs(xt(3)-xs(3)) < 0.1
+        aux = aux +1;        
+    end 
     %k,t0
     k = k + 1;
 
@@ -231,7 +241,7 @@ hold off;
     
  hold off;
  
- if 1
+ if 0
  
       figure(111);
     curve = animatedline('LineWidth',2,'Color','#D95319');

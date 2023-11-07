@@ -1,4 +1,4 @@
-function [control_action,x_seq_next,u_seq_next] = mpc_controller(current_state,P,x_seq_prev,u_seq_prev, mpc_external_function)
+function [control_action,x_seq_next,u_seq_next] = mpc_controller(current_state,P,x_seq_prev,u_seq_prev, mpc_external_function, aux1)
 
         use_external_function = 1;
         
@@ -17,8 +17,10 @@ function [control_action,x_seq_next,u_seq_next] = mpc_controller(current_state,P
             %control_action = u_seq;
         
         else
-            
-      
+            if aux1 == 1
+                current_state(10) = current_state(10) +  -2;
+            end
+                
             [u_seq, x_seq] = mpc_external_function(current_state,u_seq_prev,x_seq_prev);
             control_action = [P.m*u_seq(1:3,1) - P.m*P.g*[0;0;1];u_seq(4,1)];
         

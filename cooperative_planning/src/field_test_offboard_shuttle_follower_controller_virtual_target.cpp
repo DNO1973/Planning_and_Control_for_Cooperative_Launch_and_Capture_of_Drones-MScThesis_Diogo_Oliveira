@@ -48,7 +48,7 @@ double kp_velocity = 1, ki_velocity = 0, kd_velocity = 0, kp_heading = 1;
 int proximity_radius_shuttle = 1;
 int proximity_radius_target = 10;
 int target_shuttle_vertical_closeness = 6;
-int target_shuttle_horizontal_closeness = 10;
+int target_shuttle_horizontal_closeness = 5;
 int verticalDistance = 2;
 
 int targetReached = 0;
@@ -134,8 +134,12 @@ void calculateDesiredVelocityLinear(){//REVER ISTO POSSIVELMENTE ESTA MAL; CONFI
 
 
 void captureStatusResult(){
-    //Develop here capture sensing mechanism, as of now, all captures fail (msg.data = 0;)
+    //Develop here capture sensing mechanism, as of now, all captures succeed (msg.data = 1;)
     ros::Rate rate(10);
+
+
+
+    capture_timer.stop();
 
    ros::Publisher capture_status_pub = nh->advertise<std_msgs::Int32>("cooperative_planning/state_machine/capture_success", 10);
     rate.sleep();
@@ -143,14 +147,26 @@ void captureStatusResult(){
     std_msgs::Int32 msg;
     msg.data = 1;
     capture_status_pub.publish(msg);
-    mpc_is_active = 0;
+    rate.sleep();
+    std::cout << "Sending Capture Status " << std::endl;
 
+    mpc_is_active = 0;
+    
+    
+    double vel[3][1];
+    vel[0][0]=shuttle->ekf.vel[0][0]/2; vel[1][0]=shuttle->ekf.vel[1][0]/2; vel[2][0]=shuttle->ekf.vel[2][0]/2;    
+    shuttle->set_vel_yaw(vel, 0, 5);
+    vel[0][0]=0; vel[1][0]=0; vel[2][0]=0;    
+    shuttle->set_vel_yaw(vel, 0, 5);
+    
     rate.sleep();
 }
 
 void timerCb(const ros::TimerEvent& event){
     captureStatusResult();
 }
+
+int aux = 0;
 
 void executeCaptureManeuverCb(const std_msgs::Empty::ConstPtr& msg){
 
@@ -159,10 +175,12 @@ void executeCaptureManeuverCb(const std_msgs::Empty::ConstPtr& msg){
     std::cout << "Executing Capture Maneuver " << std::endl;
 
     //a timer will be set to simulate a capture maneuver happening, after the timer runs out, the captureStatusResult function determines if the capture was succefull
-    capture_timer = nh->createTimer(ros::Duration(5), timerCb);
+    capture_timer = nh->createTimer(ros::Duration(7), timerCb);
 
+    capture_timer.start();
 
-    
+    ros::Rate rate(10);
+    rate.sleep();
 
 }
 
@@ -171,6 +189,7 @@ void dropTimerCb(const ros::TimerEvent& event){
  ros::Rate rate(10);
 
     ros::Publisher target_dropped_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/target_dropped", 10);
+     drop_timer.stop();
 
     rate.sleep();
 
@@ -189,6 +208,9 @@ void dropTargetCb(const std_msgs::Empty::ConstPtr& msg){
 
     drop_timer = nh->createTimer(ros::Duration(3), dropTimerCb);
 
+    drop_timer.start();
+    ros::Rate rate(10);
+    rate.sleep();
 
     
 
@@ -332,7 +354,7 @@ void performLandingCb(const std_msgs::Empty::ConstPtr& msg){
 void mpcController(ros::Publisher pub, Function mpc,double relative_x, double relative_y, double relative_z){
        
     
-    std::vector<double> xx0 = {  shuttle->ekf.pos[0][0] ,shuttle->ekf.pos[1][0],shuttle->ekf.pos[2][0],  shuttle->ekf.vel[0][0],shuttle->ekf.vel[1][0],shuttle->ekf.vel[2][0],  shuttle->ekf.att_euler[3][0],     target->ekf.pos[0][0] + relative_x ,target->ekf.pos[1][0] + relative_y,target->ekf.pos[2][0] + relative_z ,  target->ekf.vel[0][0],target->ekf.vel[1][0],target->ekf.vel[2][0],  target->ekf.att_euler[3][0] + 1.3962634 }; //shuttle and target states for mpc
+    std::vector<double> xx0 = {  shuttle->ekf.pos[0][0] ,shuttle->ekf.pos[1][0],shuttle->ekf.pos[2][0],  shuttle->ekf.vel[0][0],shuttle->ekf.vel[1][0],shuttle->ekf.vel[2][0],  shuttle->ekf.att_euler[3][0],     target->ekf.pos[0][0] + relative_x ,target->ekf.pos[1][0] + relative_y,target->ekf.pos[2][0] + relative_z ,  target->ekf.vel[0][0],target->ekf.vel[1][0],target->ekf.vel[2][0],  target->ekf.att_euler[3][0] /*+ 1.3962634*/ }; //shuttle and target states for mpc
     
     ros::Time start_time = ros::Time::now();
 
@@ -346,8 +368,8 @@ void mpcController(ros::Publisher pub, Function mpc,double relative_x, double re
         lele = 1;
         
          }
-    } 
-    */
+    } */
+    
     
     //std::vector<DM> arg1 ={DM(xx0),dZ, xx, uu};
     std::vector<DM> arg1 ={DM(xx0), xx, uu};
@@ -376,8 +398,8 @@ void mpcController(ros::Publisher pub, Function mpc,double relative_x, double re
     double vel_x = (double)result_matrix(3,1);
     double vel_y = (double)result_matrix(4,1);
     double vel_z = (double)result_matrix(5,1);
-    double psi = (double)result_matrix(6,1);
-    //double psi = target->ekf.att_euler[3][0] + 1.3962634 ;
+    //double psi = (double)result_matrix(6,1);
+    double psi = target->ekf.att_euler[3][0] + 1.3962634 ;
 
     double vel_ned[3][1];
     vel_ned[0][0] = vel_x;
@@ -570,6 +592,13 @@ int main (int argc, char ** argv){
 */
 
 
+       /*ROS_WARN_STREAM("Shuttle Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
+       ROS_WARN_STREAM("Target Position : " << target->ekf.pos[0][0] + referential_relative_to_shuttle_x << "  " << target->ekf.pos[1][0] +referential_relative_to_shuttle_y << "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z);
+        ROS_WARN_STREAM("Shuttle Velocity: " << shuttle->ekf.vel[0][0]  << "  " << shuttle->ekf.vel[1][0]  << "  " << shuttle->ekf.vel[2][0]);
+        ROS_WARN_STREAM("Target Velocity : " << target->ekf.vel[0][0]  << "  " << target->ekf.vel[1][0]  << "  " << target->ekf.vel[2][0] );
+        ROS_WARN_STREAM("Shuttle Yaw: " << shuttle->ekf.att_euler[3][0] );
+        ROS_WARN_STREAM("Target Yaw : " << target->ekf.att_euler[3][0] + 1.3962634  );*/
+
 
         desiredPosReached(reached_pos_pub);
         stopAreaReached(stop_area_pub);
@@ -589,7 +618,7 @@ int main (int argc, char ** argv){
             
         }*/
 
-        if(captureMoment) updateDesiredPositionFollower(referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
+        //if(captureMoment) updateDesiredPositionFollower(referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
 
 
         vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    

@@ -4,7 +4,11 @@
 #include <mavros_cpp/UAV.h>
 #include <geometry_msgs/Point.h>
 #include <std_msgs/Int64.h>
-
+#include <drone_gimmicks_library/DroneGimmicks.h>
+#include <ros/ros.h>
+#include <drone_utils_cpp/DroneInfo.h>
+#include <drone_utils_cpp/Utils.h>
+#include <mavros_cpp/UAV.h>
 
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
@@ -40,6 +44,10 @@ double previous_error[3][1];
 double Tprev;
 
 double shuttle_stop_area[3][2];
+
+double referential_relative_to_shuttle_x;
+double referential_relative_to_shuttle_y;
+double referential_relative_to_shuttle_z;
 
 
 void calculateDesiredHeading(){
@@ -161,6 +169,24 @@ int main (int argc, char ** argv){
     ros::Publisher reached_pos_pub = nh->advertise<std_msgs::Int64>("cooperative_planning/shuttleController/reached_target_pos", 10);
 
 
+
+
+
+ double aux_ned[3][1], aux_enu[3][1];
+    aux_enu[0][0] =  DroneGimmicks::getParameters<double>(*nh, "initialRelativeDistanceX"); 
+    aux_enu[1][0] =  DroneGimmicks::getParameters<double>(*nh, "initialRelativeDistanceY"); 
+    aux_enu[2][0] =  DroneGimmicks::getParameters<double>(*nh, "initialRelativeDistanceZ");
+    
+    DroneLib::enu_to_ned(aux_enu, aux_ned);
+    referential_relative_to_shuttle_x = aux_ned[0][0];
+    referential_relative_to_shuttle_y = aux_ned[1][0];
+    referential_relative_to_shuttle_z = aux_ned[2][0];
+
+
+
+
+
+
     ros::Rate rate(20.0);
 
     ROS_WARN("STARTING OFFBOARD VELOCITY CONTROLLER FOR SHUTTLE DRONE ");
@@ -177,7 +203,7 @@ int main (int argc, char ** argv){
     
     shuttle->start_offboard_mission();
 
-    shuttle->set_pos_yaw(pos, yaw, 10);
+    //shuttle->set_pos_yaw(pos, yaw, 10);
 
     
      Tprev = ros::Time::now().toSec();
@@ -190,17 +216,32 @@ int main (int argc, char ** argv){
 
 
         //ROS_WARN_STREAM("Current Position" << shuttle->sen.gps.pos[0][0]  << "  " << shuttle->sen.gps.pos[1][0]  << "  " << shuttle->sen.gps.pos[2][0]);
-        ROS_WARN_STREAM("Current Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
-        ROS_WARN_STREAM("Desired Position: " << desiredPosition.x  << "  " << desiredPosition.y  << "  " << desiredPosition.z);
+        //ROS_WARN_STREAM("Current Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
+        //ROS_WARN_STREAM("Desired Position: " << desiredPosition.x  << "  " << desiredPosition.y  << "  " << desiredPosition.z);
+        ROS_WARN_STREAM("Shuttle Position: " << shuttle->ekf.pos[0][0]  << "  " << shuttle->ekf.pos[1][0]  << "  " << shuttle->ekf.pos[2][0]);
+        ROS_WARN_STREAM("Target Position Original: " << target->ekf.pos[0][0]  << "  " << target->ekf.pos[1][0]  << "  " << target->ekf.pos[2][0]);
+       ROS_WARN_STREAM("Target Position : " << target->ekf.pos[0][0] + referential_relative_to_shuttle_x << "  " << target->ekf.pos[1][0] +referential_relative_to_shuttle_y << "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z);
+        ROS_WARN_STREAM("Target Position With Rotation : " << cos(1.3962634 )*(target->ekf.pos[0][0] + referential_relative_to_shuttle_x) - sin(1.3962634)*(target->ekf.pos[1][0] +referential_relative_to_shuttle_y) << "  " << sin(1.3962634 )*(target->ekf.pos[0][0] + referential_relative_to_shuttle_x) + cos(1.3962634)*(target->ekf.pos[1][0] +referential_relative_to_shuttle_y)<< "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z);
+        ROS_WARN_STREAM("Target Position With Rotation TROcados la dentro : " << cos(1.3962634 )*(target->ekf.pos[1][0] + referential_relative_to_shuttle_x) - sin(1.3962634)*(target->ekf.pos[0][0] +referential_relative_to_shuttle_y) << "  " << sin(1.3962634 )*(target->ekf.pos[1][0] + referential_relative_to_shuttle_x) + cos(1.3962634)*(target->ekf.pos[0][0] +referential_relative_to_shuttle_y)<< "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z);
+        ROS_WARN_STREAM("Target Position With Rotation trocados xy : "  <<  sin(1.3962634 )*(target->ekf.pos[0][0] + referential_relative_to_shuttle_x) + cos(1.3962634)*(target->ekf.pos[1][0] +referential_relative_to_shuttle_y)<< "  " <<cos(1.3962634 )*(target->ekf.pos[0][0] + referential_relative_to_shuttle_x) - sin(1.3962634)*(target->ekf.pos[1][0] +referential_relative_to_shuttle_y)<< "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z);
+        ROS_WARN_STREAM("Target Position With Rotation - 1.3: " << cos(-1.3962634 )*(target->ekf.pos[0][0] + referential_relative_to_shuttle_x) - sin(-1.3962634)*(target->ekf.pos[1][0] +referential_relative_to_shuttle_y) << "  " << sin(-1.3962634 )*(target->ekf.pos[0][0] + referential_relative_to_shuttle_x) + cos(-1.3962634)*(target->ekf.pos[1][0] +referential_relative_to_shuttle_y)<< "  " << target->ekf.pos[2][0] + referential_relative_to_shuttle_z);
+        ROS_WARN_STREAM("Shuttle Velocity: " << shuttle->ekf.vel[0][0]  << "  " << shuttle->ekf.vel[1][0]  << "  " << shuttle->ekf.vel[2][0]);
+        ROS_WARN_STREAM("Target Velocity Original: " << target->ekf.vel[0][0]  << "  " << target->ekf.vel[1][0]  << "  " << target->ekf.vel[2][0]);
+        ROS_WARN_STREAM("Target Velocity : " << target->ekf.vel[0][0]  << "  " << target->ekf.vel[1][0]  << "  " << target->ekf.vel[2][0] );
+        ROS_WARN_STREAM("Shuttle Yaw: " << shuttle->ekf.att_euler[3][0] );
+        ROS_WARN_STREAM("Target Yaw Original: " << target->ekf.att_euler[3][0]);
+        ROS_WARN_STREAM("Target Yaw : " << target->ekf.att_euler[3][0] + 1.3962634  );
 
 
 
-        desiredPosReached(reached_pos_pub);
+      /*  desiredPosReached(reached_pos_pub);
 
 
         calculateDesiredVelocityLinear();
 
         vel[0][0]=desiredVelocityLinear.x; vel[1][0]=desiredVelocityLinear.y; vel[2][0]=desiredVelocityLinear.z;    
+        shuttle->set_vel_yaw(vel, desiredHeading, 0.01);*/
+        vel[0][0]= sin(1.3962634 )*(target->ekf.vel[0][0]) + cos(1.3962634 )*(target->ekf.vel[1][0]); vel[1][0]=cos(1.3962634 )*(target->ekf.vel[0][0]) - sin(1.3962634 )*(target->ekf.vel[1][0]);vel[2][0]=target->ekf.vel[2][0];    
         shuttle->set_vel_yaw(vel, desiredHeading, 0.01);
 
         //pos[0][0]=desiredPosition.x; pos[1][0]=desiredPosition.y; pos[2][0]=desiredPosition.z;

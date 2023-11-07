@@ -49,11 +49,10 @@ class SendToWaitingPoint(smach.State):
 
 
         pos_to_send = Point() #hardcoded shuttle waiting point
-        #pos_to_send.x = 35.35
-        #pos_to_send.y = -9.75
-        pos_to_send.x = 42
-        
-        pos_to_send.y = -13
+        pos_to_send.x = 35.35
+        pos_to_send.y = -9.75
+        #pos_to_send.x = 42
+       # pos_to_send.y = -13
         pos_to_send.z = -25
         self.target_pos_pub.publish(pos_to_send)
 
@@ -153,14 +152,18 @@ class ActivateMPCAndStartMoving(smach.State):
         self.target_reached_sub = rospy.Subscriber("/cooperative_planning/state_machine/target_is_close", Empty, self.targetCloseWarningCb)
         rospy.Timer(rospy.Duration(60), self.timer_callback)
         
-        if self.aux < 3 : #send at least 3 messages in case one of them is lost
-            msg = Empty() 
-            self.activate_mpc_pub.publish(msg)
-            self.aux = self.aux +1
-
+        # if self.aux < 3 : #send at least 3 messages in case one of them is lost
+        #     msg = Empty() 
+        #     self.activate_mpc_pub.publish(msg)
+        #     self.aux = self.aux +1
+        if self.aux == 0 : 
+             msg = Empty() 
+             self.activate_mpc_pub.publish(msg)
+             self.aux = 1
 
         if self.timeout == 1 :
             self.timeout = 0
+            self.aux = 0
             return 'timer_timeout'
 
 
@@ -170,9 +173,11 @@ class ActivateMPCAndStartMoving(smach.State):
                 return 'target_not_close_nor_failsafes_activated'
             else:
                 self.target_is_close = 0
+                self.aux = 0
                 return 'target_is_close_warning'
         else:
             self.reached_stop_area = 0
+            self.aux = 0
             return 'reached_stop_area'
 
 
@@ -221,10 +226,13 @@ class ExecuteCaptureManeuver(smach.State):
        
         
         if self.capture_status == 0:
+           self.capture_status = 2
+           self.aux = 0
            return 'capture_failure'
         
         elif self.capture_status == 1:
-           self.capture_status = 0
+           self.capture_status = 2
+           self.aux = 0
            return 'capture_success'
         else :
             return 'executing_capture_maneuver'

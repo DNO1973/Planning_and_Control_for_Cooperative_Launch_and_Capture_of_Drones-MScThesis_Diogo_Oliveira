@@ -329,6 +329,8 @@ add_executable(target_state_reader src/target_state_reader.cpp)
 target_link_libraries(target_state_reader ${catkin_LIBRARIES})
 
 
+add_executable(export_odometry src/export_odometry.cpp)
+target_link_libraries(export_odometry ${catkin_LIBRARIES})
 
 
 add_executable(field_test_offboard_shuttle_follower_controller_virtual_target src/field_test_offboard_shuttle_follower_controller_virtual_target.cpp)
@@ -350,7 +352,6 @@ target_link_libraries(example_code_gen ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
 
 add_executable(offboard_shuttle_follower_mpc_2shuttles src/offboard_shuttle_follower_mpc_2shuttles.cpp)
 target_link_libraries(offboard_shuttle_follower_mpc_2shuttles ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
-
 
 
 

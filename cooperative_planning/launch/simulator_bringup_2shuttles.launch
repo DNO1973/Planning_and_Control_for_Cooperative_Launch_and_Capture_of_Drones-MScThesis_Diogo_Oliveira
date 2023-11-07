@@ -45,7 +45,7 @@
 
     <arg name="rollTarget"  default="0.0"/>
     <arg name="pitchTarget" default="0.0"/>
-    <arg name="yawTarget"   default="0.0"/>
+    <arg name="yawTarget"   default="-1.3962634"/>
     
 
     <!-- Relative initial distance from shuttle to target pose in ENU-->

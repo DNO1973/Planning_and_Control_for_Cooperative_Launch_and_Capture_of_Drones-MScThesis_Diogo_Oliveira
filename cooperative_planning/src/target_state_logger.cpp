@@ -172,7 +172,7 @@ int main (int argc, char ** argv){
     
     
     
-    ros::Rate rate(10.0);
+    ros::Rate rate(100.0);
     ROS_WARN("STARTING OFFBOARD TARGET STATE LOGGER");
     double pos[3][1], vel[3][1];
 	double yaw, t0, t;
@@ -181,7 +181,7 @@ int main (int argc, char ** argv){
 
 
   // file name
-    std::string file_name = "target_states_logsE";
+    std::string file_name = "target_states_logs";
     std::string prefix_lib = ros::package::getPath("cooperative_planning") + "/include/";
     std::string lib_name = prefix_lib + file_name + ".csv";
 

@@ -9,6 +9,7 @@
 #include <std_msgs/Empty.h>
 #include <smach_msgs/SmachContainerStatus.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/String.h>
 
 
 
@@ -34,10 +35,8 @@ ros::NodeHandle * nh;
 ros::NodeHandle * nh_p;
 
 DroneLib::UAV * shuttle = nullptr;
-DroneLib::UAV * target = nullptr;
 
 DroneLib::DroneInfo shuttle_drone_info;
-DroneLib::DroneInfo target_drone_info;
 
 
 //Controller Variables
@@ -85,7 +84,7 @@ double referential_relative_to_shuttle_z;
 
 int state_machine_status = 0;
 float mpc_computation_time = 1111;
-
+std::string virtual_point_states ="0,0,0,0,0,0,0";
 
 
 
@@ -116,6 +115,15 @@ void mpcTimeCb(const std_msgs::Float32::ConstPtr& msg){
 
 
 
+void virtualPointCb(const std_msgs::String::ConstPtr& msg){
+      virtual_point_states = msg->data;
+
+}
+
+
+
+
+
 
 
 
@@ -135,15 +143,7 @@ int main (int argc, char ** argv){
     shuttle_drone_info.g = DroneGimmicks::getParameters<double>(*nh, "drone_params/g");
     shuttle_drone_info.thrust_curve = DroneGimmicks::getParameters<std::string>(*nh, "drone_params/thrust_curve"); 
 
-    target_drone_info.drone_ns = DroneGimmicks::getParameters<std::string>(*nh, "namespaceTarget");
-    shuttle_drone_info.ID = DroneGimmicks::getParameters<double>(*nh, "IDTarget");
-    target_drone_info.mass = DroneGimmicks::getParameters<double>(*nh, "drone_params/mass");
-    target_drone_info.radius = DroneGimmicks::getParameters<double>(*nh, "drone_params/radius");
-    target_drone_info.height = DroneGimmicks::getParameters<double>(*nh, "drone_params/height");
-    target_drone_info.num_rotors = DroneGimmicks::getParameters<int>(*nh, "drone_params/num_motors");
-    target_drone_info.g = DroneGimmicks::getParameters<double>(*nh, "drone_params/g");
-    target_drone_info.thrust_curve = DroneGimmicks::getParameters<std::string>(*nh, "drone_params/thrust_curve"); 
-
+   
 
     /* Create the drone objects */
     shuttle = new DroneLib::UAV(shuttle_drone_info.drone_ns, 
@@ -154,14 +154,7 @@ int main (int argc, char ** argv){
         shuttle_drone_info.thrust_curve,
         nh, nh_p); 
 
-    target = new DroneLib::UAV(target_drone_info.drone_ns, 
-        target_drone_info.mass, 
-        target_drone_info.radius, 
-        target_drone_info.height, 
-        target_drone_info.num_rotors, 
-        target_drone_info.thrust_curve,
-        nh, nh_p); 
-
+   
 
     
     /*
@@ -187,6 +180,7 @@ int main (int argc, char ** argv){
     
     ros::Subscriber state_machine_subscriber = nh->subscribe("/state_machine/smach/container_status", 10, stateMachineStatusCb);
     ros::Subscriber mpc_time_sub = nh->subscribe("/cooperative_planning/mpc_computation_time", 10, mpcTimeCb);
+    ros::Subscriber virtual_point_sub = nh->subscribe("/cooperative_planning/virtual_point_states", 10, virtualPointCb);
     
     
     
@@ -222,7 +216,7 @@ int main (int argc, char ** argv){
        
 
         myfile.open (lib_name, std::ios::app);
-      myfile  << shuttle->ekf.pos[0][0]  << "," <<  shuttle->ekf.pos[1][0]  << "," <<  shuttle->ekf.pos[2][0] << "," <<   shuttle->ekf.vel[0][0] << "," << shuttle->ekf.vel[1][0] << "," << shuttle->ekf.vel[2][0] << "," <<   shuttle->ekf.att_euler[3][0]   << "," <<  target->ekf.pos[0][0] + referential_relative_to_shuttle_x << "," << target->ekf.pos[1][0] + referential_relative_to_shuttle_y << "," << target->ekf.pos[2][0] + referential_relative_to_shuttle_z << "," <<  target->ekf.vel[0][0] << "," << target->ekf.vel[1][0] << "," << target->ekf.vel[2][0] << "," <<  target->ekf.att_euler[3][0] + 1.3962634 << "," << state_machine_status << "," <<  mpc_computation_time  << "," << "\n";
+      myfile  << shuttle->ekf.pos[0][0]  << "," <<  shuttle->ekf.pos[1][0]  << "," <<  shuttle->ekf.pos[2][0] << "," <<   shuttle->ekf.vel[0][0] << "," << shuttle->ekf.vel[1][0] << "," << shuttle->ekf.vel[2][0] << "," <<   shuttle->ekf.att_euler[3][0]   << "," << virtual_point_states << "," <<  state_machine_status << "," <<  mpc_computation_time  << "," << "\n";
     ROS_WARN("logging...");
       
       

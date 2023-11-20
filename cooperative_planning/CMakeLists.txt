@@ -333,6 +333,10 @@ add_executable(export_odometry src/export_odometry.cpp)
 target_link_libraries(export_odometry ${catkin_LIBRARIES})
 
 
+add_executable(export_odometry_virtual_point src/export_odometry_virtual_point.cpp)
+target_link_libraries(export_odometry_virtual_point ${catkin_LIBRARIES})
+
+
 add_executable(field_test_offboard_shuttle_follower_controller_virtual_target src/field_test_offboard_shuttle_follower_controller_virtual_target.cpp)
 target_link_libraries(field_test_offboard_shuttle_follower_controller_virtual_target ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
 
@@ -347,8 +351,8 @@ target_link_libraries(offboard_shuttle_follower_mpc_controller ${catkin_LIBRARIE
 add_executable(example_use_nlp_external src/example_use_nlp_external.cpp)
 target_link_libraries(example_use_nlp_external ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
 
-add_executable(example_code_gen src/example_code_gen.cpp)
-target_link_libraries(example_code_gen ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
+add_executable(mpc_library_gen src/mpc_library_gen.cpp)
+target_link_libraries(mpc_library_gen ${catkin_LIBRARIES} ${CASADI_LIBRARIES})
 
 add_executable(offboard_shuttle_follower_mpc_2shuttles src/offboard_shuttle_follower_mpc_2shuttles.cpp)
 target_link_libraries(offboard_shuttle_follower_mpc_2shuttles ${catkin_LIBRARIES} ${CASADI_LIBRARIES})

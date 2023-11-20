@@ -4,6 +4,12 @@
 
 
 <!-- Run for embedded simulation-->
+  
+  
+  
+
+
+  <!-- To simulate target in gazebo inside drone-->
   <!--include file="$(find cooperative_planning)/launch/virtual_simulator_bringup_target.launch"/-->
 
 
@@ -24,14 +30,14 @@
     <arg name="GCS_PORT" default="$(eval 15001 + arg('ID'))"/>
 
     <!-- MAVROS Configurations -->
-    <include file="$(find mavros)/launch/px4.launch">
+    <!--include file="$(find mavros)/launch/px4.launch">
       <arg name="fcu_url" value="/dev/ttyUSB0:921600"/>
-      <!--arg name="gcs_url" value="udp://@$(arg GCS_IP):$(arg GCS_PORT)"/-->
+      <arg name="gcs_url" value="udp://@$(arg GCS_IP):$(arg GCS_PORT)"/>
       <arg name="gcs_url" value=""/>
 
       <arg name="tgt_system" value="$(eval arg('ID'))"/>
       <arg name="tgt_component" value="1"/>
-    </include>
+    </include-->
 
     <!-- Load Drone_vx algorithms -->
     <include file="$(find cooperative_planning)/launch/real_virtual_drone_sim.launch">
@@ -46,13 +52,16 @@
 
   <arg name="nameTarget" default="plane"/>
   <arg name="IDTarget" default="1"/>
+
+
+
 <group ns="$(arg nameTarget)$(arg IDTarget)">
 
     
      <!-- MAVROS Configurations -->
     <include file="$(find mavros)/launch/px4.launch">
-      <arg name="fcu_url" value="udp://:15001@"/>
-      <arg name="gcs_url" value="udp://@localhost:15002"/>
+      <arg name="fcu_url" value="udp://:15004@"/>
+      <arg name="gcs_url" value="udp://@localhost:15005"/>
       <arg name="tgt_system" value="$(eval 1 + 1)"/>
       <arg name="tgt_component" value="1"/>
     </include>

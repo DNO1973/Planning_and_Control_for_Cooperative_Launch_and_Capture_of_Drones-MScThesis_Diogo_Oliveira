@@ -59,7 +59,7 @@
     <!-- MAVROS Configurations -->
     <include file="$(find mavros)/launch/px4.launch">
       <arg name="fcu_url" value="udp://:$(arg ip_name)@localhost:$(arg ip_port)"/>
-      <arg name="gcs_url" value="udp://@192.168.1.11:15001"/>
+      <arg name="gcs_url" value="udp://@192.168.50.199:15004"/>
       <arg name="tgt_system" value="$(eval 1 + arg('IDTarget'))"/>
       <arg name="tgt_component" value="1"/>
     </include> 

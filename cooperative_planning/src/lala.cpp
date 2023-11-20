@@ -8,7 +8,6 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
-#include <std_msgs/Float32.h>
 
 
 #include <mavros_msgs/CommandBool.h>
@@ -149,7 +148,7 @@ void calculateDesiredVelocityLinear(){//REVER ISTO POSSIVELMENTE ESTA MAL; CONFI
 
 
 void captureStatusResult(){
-    //Develop here capture sensing mechanism, as of now, all captures succeed (msg.data = 1;)
+      //Develop here capture sensing mechanism, as of now, all captures succeed (msg.data = 1;)
     ros::Rate rate(1);
 
 
@@ -157,33 +156,32 @@ void captureStatusResult(){
     capture_timer.stop();
 
    ros::Publisher capture_status_pub = nh->advertise<std_msgs::Int32>("cooperative_planning/state_machine/capture_success", 10);
-    ros::Publisher mpc_time_pub = nh->advertise<std_msgs::Float32>("cooperative_planning/mpc_computation_time", 10);
-
-    std::cout << "Sending Capture Status " << std::endl;
-
-    
-    mpc_is_active = 0;
-    
- 
-    
-    double vel[3][1];
-    vel[0][0]=0; vel[1][0]=0; vel[2][0]=0;    
-    shuttle->set_vel_yaw(vel, 0, 0.001);
-
     rate.sleep();
 
     std_msgs::Int32 msg;
     msg.data = 1;
-    capture_status_pub.publish(msg); 
+    capture_status_pub.publish(msg);
+    rate.sleep();
+    std::cout << "Sending Capture Status " << std::endl;
 
+    mpc_is_active = 0;
     
-     std_msgs::Float32 msg1;
-    msg1.data = 1111;
-    mpc_time_pub.publish(msg1); 
-
+    
+ 
+    double vel[3][1]; //to avoid agressive maneuvers
+    vel[0][0]=shuttle->ekf.vel[0][0]*0.7; vel[1][0]=shuttle->ekf.vel[1][0]*0.7; vel[2][0]=shuttle->ekf.vel[2][0]*0.7;    
+    shuttle->set_vel_yaw(vel, 0, 0.001);
+    rate.sleep();
+    vel[0][0]=vel[0][0]*0.7; vel[1][0]=vel[1][0]*0.7; vel[2][0]=vel[2][0]*0.7;    
+    shuttle->set_vel_yaw(vel, 0, 0.001);
+    rate.sleep();
+    vel[0][0]=vel[0][0]*0.7; vel[1][0]=vel[1][0]*0.7; vel[2][0]=vel[2][0]*0.7;    
+     shuttle->set_vel_yaw(vel, 0, 0.001);
+    rate.sleep();
+    vel[0][0]=0; vel[1][0]=0; vel[2][0]=0;    
+    shuttle->set_vel_yaw(vel, 0, 0.001);
 
     rate.sleep();
-    std::cout << "Capture Status Sent" << std::endl;
 }
 
 void timerCb(const ros::TimerEvent& event){
@@ -210,7 +208,7 @@ void executeCaptureManeuverCb(const std_msgs::Empty::ConstPtr& msg){
 
 
 void dropTimerCb(const ros::TimerEvent& event){
- ros::Rate rate(1);
+ ros::Rate rate(10);
 
     ros::Publisher target_dropped_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/target_dropped", 10);
      drop_timer.stop();
@@ -233,7 +231,7 @@ void dropTargetCb(const std_msgs::Empty::ConstPtr& msg){
     drop_timer = nh->createTimer(ros::Duration(3), dropTimerCb);
 
     drop_timer.start();
-    ros::Rate rate(1);
+    ros::Rate rate(10);
     rate.sleep();
 
     
@@ -433,9 +431,7 @@ void mpcController(ros::Publisher pub, Function mpc,double relative_x, double re
 
     shuttle->set_vel_yaw(vel_ned, psi, 0.001);
 
-        std_msgs::Float32 msg;
-    msg.data = (float)delta_t_sec;
-    pub.publish(msg); 
+    
 
          
   
@@ -520,9 +516,9 @@ referential_relative_to_shuttle_z = 0;
     ros::Publisher mission_finished_pub = nh->advertise<std_msgs::Empty>("cooperative_planning/state_machine/mission_finished", 10);
 
 
+    ros::Publisher  accel_shuttle_pub = nh->advertise<geometry_msgs::Vector3Stamped>("/"+shuttle_drone_info.drone_ns+"/mavros/setpoint_accel/accel", 1);
     
     ros::Publisher target_states_pub = nh->advertise<std_msgs::String>("cooperative_planning/virtual_point_states", 10);
-    ros::Publisher mpc_time_pub = nh->advertise<std_msgs::Float32>("cooperative_planning/mpc_computation_time", 10);
     
     
      // file name
@@ -681,7 +677,7 @@ referential_relative_to_shuttle_z = 0;
         }
         else{
 
-                   mpcController(mpc_time_pub, mpc_control, referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
+                   mpcController(accel_shuttle_pub, mpc_control, referential_relative_to_shuttle_x,referential_relative_to_shuttle_y,referential_relative_to_shuttle_z);
 
         }
         
@@ -698,8 +694,8 @@ referential_relative_to_shuttle_z = 0;
 
 
 
-    pos[0][0]= -5; 
-    pos[1][0] = -5;
+    pos[0][0]= 0; 
+    pos[1][0] = 0;
     pos[2][0]= -5;
 	yaw = 0.0;
     shuttle->set_pos_yaw(pos, yaw, 5);

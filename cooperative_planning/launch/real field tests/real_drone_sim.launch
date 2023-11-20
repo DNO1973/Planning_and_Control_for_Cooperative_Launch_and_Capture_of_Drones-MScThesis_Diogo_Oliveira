@@ -6,7 +6,7 @@
   <arg name="nameShuttle" default="typhoon_h480"/>
   <arg name="nameTarget" default="plane"/>
   <arg name="mission" default="simulation"/>
-  <arg name="IDShuttle" default="0"/>
+  <arg name="IDShuttle" default="1"/>
   <arg name="IDTarget" default="1"/>
 
   <!-- Define the namespace for this drone being launched -->
@@ -21,10 +21,15 @@
   <param name="IDTarget" type="int" value="$(arg IDTarget)"/>
   <param name="namespaceTarget" type="string" value="$(arg namespaceTarget)"/>
 
+ 
+ 
+   <node pkg="rosbag" type="record" name="rosbag_node"
+       args="record -a -o $(find cooperative_planning)/ROSBAG_virtual_point"/>   
 
 
-   <node pkg="cooperative_planning" type="field_test_offboard_shuttle_follower_mpc_virtual_point" name="controller_node"/> 
 
+   <node pkg="cooperative_planning" type="field_test_offboard_shuttle_follower_mpc_virtual_point" name="controller_node"  output="screen"/> 
+   <node pkg="cooperative_planning" type="state_machine.py" name="state_machine_node"/> 
 
 
  

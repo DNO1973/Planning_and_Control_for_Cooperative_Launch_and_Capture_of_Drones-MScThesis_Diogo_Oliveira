@@ -13,7 +13,6 @@
 
     
     <!-- NOTE: Name defines the model to use, make sure that the corresponding model is available -->
-    <!-- FEITO AINDA COM O TYPHOON PARA TESTES COOPERATIVOS; MAIS TARDE MUDAR PARA O PLANE -->
 
     <!-- Target's name and identifier -->
     <arg name="nameTarget" default="plane"/>

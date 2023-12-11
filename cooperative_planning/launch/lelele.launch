@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
- <node pkg="rosbag" type="record" name="rosbag_node"
-       args="record -a -o $(find cooperative_planning)/ROSBAG_virtual_target"/>   
-
-
-</launch>

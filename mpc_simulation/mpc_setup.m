@@ -3,6 +3,7 @@
 
 
 addpath('C:\Program Files\Polyspace\R2020a\bin\win64\casadi-3.6.3-windows64-matlab2018b')
+addpath('D:\Docments\Matlab\toolbox\casadi-3.6.3-windows64-matlab2018b')
 import casadi.*
 
 
@@ -36,13 +37,13 @@ f_cont = Function('f_cont',{xx,uu},{xdot},{'x','u'},{'ode'}); % last two represe
 % controller parameters
 Param.T = 5; % Time horizon
 Param.N = 25; % Number of control intervals
-Param.Q = blkdiag(2,2,2,2,2,2,1)*10;
+Param.Q = blkdiag(3,3,2,2,2,2,1)*10;
 Param.R = blkdiag(1,1,1,1)*10;
 Param.S = blkdiag(1,1)*0;
 %Param.S = blkdiag(1,1,1)*10;
 
 Param.closeness = 0.5;
-Param.height = 2;
+Param.height = 3;
 
 
 % Integrator to discretize the system
@@ -91,6 +92,9 @@ for k = 1:Param.N
       + (Param.xx(1:2,k)-[500;20])'*Param.S*(Param.xx(1:2,k)-[500;20]);         %um ponto no final da reta predefinida par o shuttle seguir tambem
        %  + (Param.xx(4:6,k)-[8.5;0;0])'*Param.S*(Param.xx(4:6,k)-[8.5;0;0]);         %velocidade do shuttle para a frente tendo em conta a reta predifinida
 end
+
+ Param.distance = sqrt((Param.xx(1,Param.N+1)-Param.xx(8,Param.N+1))^2 + (Param.xx(2,Param.N+1)-Param.xx(9,Param.N+1))^2  ) ;
+  Param.dZ =  if_else( Param.distance <= Param.closeness,0 ,Param.height );
 obj = obj + (Param.xx(1:7,Param.N+1)-(Param.xx(8:14,Param.N+1)-[0;0;Param.dZ;0;0;0;0]))'*Param.Q*(Param.xx(1:7,Param.N+1)-(Param.xx(8:14,Param.N+1)-[0;0;Param.dZ;0;0;0;0])) ...
             + (Param.xx(1:2,Param.N+1)-[500;20])'*Param.S*(Param.xx(1:2,Param.N+1)-[500;20]); 
                  %   + (Param.xx(4:6,Param.N+1)-[8.5;0;0])'*Param.S*(Param.xx(4:6,Param.N+1)-[8.5;0;0]);  
@@ -112,7 +116,7 @@ for k=1:Param.N
   
 
    
-   MPC.subject_to(Param.xx(3,k) < Param.xx(14,k));
+   MPC.subject_to(Param.xx(3,k) < Param.xx(10,k));
     
     MPC.subject_to(-15 <= Param.xx(4:6,k) <=15);
     MPC.subject_to(-3 <= Param.uu(1:3,k) <= 3); %accel

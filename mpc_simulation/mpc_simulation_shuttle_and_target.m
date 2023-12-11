@@ -16,7 +16,7 @@ Ts =Param.T/Param.N;
 Param.m = 4;
 Param.g = 9.81;
 
-%% Defining the system of Target ------------------------------------------------------------------------------------------
+%% Defining Target System ------------------------------------------------------------------------------------------
 
 % Constrains of UAV
 
@@ -45,7 +45,7 @@ rhs_target = [v_target*cos(psi_target)*cos(gamma_target); v_target*sin(psi_targe
 f_target = Function('f_target',{states_target,controls_target}, {rhs_target});                                         % Nonlinear Mapping Function f(x,u)
 
 
-%% Defining the system of Shuttle ------------------------------------------------------------------------------------------
+%% Defining Shuttle System ------------------------------------------------------------------------------------------
 
 % Constrains of UAV
 
@@ -82,7 +82,7 @@ f_shuttle = Function('f_shuttle',{states_shuttle,controls_shuttle}, {rhs_shuttle
 
 
 
-%% Simulation starts from here----------------------------------------------------------------------------------------------
+%% Simulation ---------------------------------------------------------------------------------------------
 t0 = 0;
 xt = [ParamFixComplex.p0;ParamFixComplex.psi0]; %initial location of target drone
 
@@ -99,7 +99,7 @@ inform_point = [160;20;-10];
 
 
 t(1) = t0;
-sim_time = 200;
+sim_time = 160;
 
 % NMPC starts form here
 
@@ -120,9 +120,9 @@ while (k < sim_time/Ts +1)
     
     
     
-    if aux > 25
-        aux1 = 1;
-    end
+%     if aux > 25
+%         aux1 = 1;
+%     end
     if target_reached_inform_point
         mpc_tic = tic;
         [u_shuttle,x_MPC,u_MPC] = mpc_controller(shuttle_states(:,k),Param,x_MPC,u_MPC, mpc_external_function,aux1);
@@ -143,7 +143,7 @@ while (k < sim_time/Ts +1)
                                                                           %apply control action to the system
                                                                         %discretizacao/avancar o tempo
     target_states(:,k+1) = xt;
-    shuttle_states(:,k+1) = [xs;xt(1:3,:);(xt(1:3,:)-shuttle_states(8:10,k))/Ts;xs(4,:)];
+    shuttle_states(:,k+1) = [xs;xt(1:3,:);(xt(1:3,:)-shuttle_states(8:10,k))/Ts;xt(4,:)];
     
     
 
@@ -163,58 +163,168 @@ main_loop_time = toc(main_loop)
 
 mpc_average_computation_time = mean(mpc_time_delay);
 mpc_average_computation_time
-%% Plotting stuff----------------------------------------------------------------------------------------------------------------------
+%% Plots----------------------------------------------------------------------------------------------------------------------
  figure(1);
-plot3(target_states(1,:),target_states(2,:), target_states(3,:),shuttle_states(1,:),shuttle_states(2,:),shuttle_states(3,:));
-%plot3(target_states(1,:),target_states(2,:), target_states(3,:));
+plot3(target_states(1,:),target_states(2,:), target_states(3,:),'-','Color','#0072BD');
 hold on;
-title('Target and Shuttle Positions');
-%plot3(target_states(1,1:50:end),target_states(2,1:50:end), target_states(3,1:50:end),'o','Color',"b");
-%plot3(shuttle_states(1,1:50:end),shuttle_states(2,1:50:end), shuttle_states(3,1:50:end),'o','Color',"r");
-xlabel('X[m]'); ylabel('y[m]'); zlabel('z[m]');
+plot3(shuttle_states(1,:),shuttle_states(2,:),shuttle_states(3,:),'--','Color','#D95319','LineWidth',1.5);
+ 
+plot3(target_states(1,1),target_states(2,1), target_states(3,1),'o','Color','#0072BD','MarkerSize',8);
+plot3(shuttle_states(1,1),shuttle_states(2,1),shuttle_states(3,1),'o','Color','#D95319','MarkerSize',8);
+
+title('Target and Shuttle Trajectories');
+
+  xlabel('North [m]');
+    ylabel('East [m]');
+    zlabel('-Down [m]');
 set(gca, 'Zdir', 'reverse');
-legend('Target', 'Shuttle');
+legend('Target Drone Trajectory', 'Shuttle Drone Trajectory', 'Target Drone Start Position','Shuttle Drone Start Position');
 grid on;
 axis equal;
-axis([-50 500 -50 100 -50 50]);
+axis([-50 650 -50 250 -30 30]);
   
 hold off;
 
 
-
-
-     figure(2);
-     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(1:3,:), '-');
+figure(2222);
+    
+     plot(Ts*(1:sim_time/Ts + 1), sqrt((target_states(1,:) - shuttle_states(1,:)).^2 + (target_states(2,:) - shuttle_states(2,:)).^2), '-','Color','#0072BD');
     
      hold on;
-     title('Shuttle and Target Positions');
-      
-     plot(Ts*(1:sim_time/Ts + 1), target_states(1:3,:), '--');
-     legend('x_{shuttle}','y_{shuttle}','z_{shuttle}','x_{target}','y_{target}','z_{target}','Interpreter','tex');  
+     title('North and East Position Error Evolution During Capture Maneuver');
+       %plot(Ts*(1:sim_time/Ts + 1), shuttle_states(1,:), '--','Color','#D95319','LineWidth',1.1);
+     
+    
+       ylabel('Error [m]');
+    xlabel('Time [s]');
+     axis([115 140 0 7 ]);
+ hold off;
+figure(3333);
+    
+     plot(Ts*(1:sim_time/Ts + 1), sqrt((target_states(3,:) - shuttle_states(3,:)).^2 ), '-','Color','#0072BD');
+    
+     hold on;
+     title('Down Position Error Evolution During Capture Maneuver');
+       %plot(Ts*(1:sim_time/Ts + 1), shuttle_states(1,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('p_{n_{target}}','p_{n_{shuttle}}','Interpreter','tex');  
+     
+        ylabel('Error [m]');
+    xlabel('Time [s]');
+     axis([115 140 0 7 ]);
+ hold off;
+     figure(21);
+    
+     plot(Ts*(1:sim_time/Ts + 1), target_states(1,:), '-','Color','#0072BD');
+    
+     hold on;
+     title('Shuttle and Target Positions Evolution in North Axis');
+       plot(Ts*(1:sim_time/Ts + 1), shuttle_states(1,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('p_{n_{target}}','p_{n_{shuttle}}','Interpreter','tex');  
+     
+       ylabel('Position North Axis [m]');
+    xlabel('Time [s]');
     
  hold off;
+  figure(22);
+    
+     plot(Ts*(1:sim_time/Ts + 1), target_states(2,:), '-','Color','#0072BD');
+    
+     hold on;
+     title('Shuttle and Target Positions Evolution in East Axis');
+       plot(Ts*(1:sim_time/Ts + 1), shuttle_states(2,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('p_{e_{target}}','p_{e_{shuttle}}','Interpreter','tex');  
+     
+       ylabel('Position East Axis [m]');
+    xlabel('Time [s]');
+    
+ hold off;
+ 
+  figure(23);
+    
+     plot(Ts*(1:sim_time/Ts + 1), target_states(3,:), '-','Color','#0072BD');
+    
+     hold on;
+     title('Shuttle and Target Positions Evolution in -Down Axis');
+       plot(Ts*(1:sim_time/Ts + 1), shuttle_states(3,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('p_{d_{target}}','p_{d_{shuttle}}','Interpreter','tex');  
+     set(gca, 'Ydir', 'reverse');
+       ylabel('Position -Down Axis [m]');
+    xlabel('Time [s]');
+    axis([0 180 -20 0 ]);
+ hold off;
+ 
+ 
+ 
+ 
+ 
  
  hold off;
      figure(3);
-     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(4,:), '-');
-     hold on;
-     title('Shuttle and Target Yaw');
-     plot(Ts*(1:sim_time/Ts + 1), target_states(4,:), '--');
-     legend('psi_{shuttle}','psi_{target}');  
     
+      plot(Ts*(1:sim_time/Ts + 1), target_states(4,:), '-','Color','#0072BD');
+     hold on;
+     title('Shuttle and Target  \psi  Evolution','Interpreter','tex');
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(7,:), '--','Color','#D95319','LineWidth',1.1);
+     legend('\psi_{target}','\psi_{shuttle}','Interpreter','tex');  
+      ylabel('\psi [rad]');
+    xlabel('Time [s]');
 
  hold off;
  
- hold off;
-     figure(4);
-     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(4:6,:), '-');
-     hold on;
-     title('Shuttle Velocity ');
-     legend('v_x','v_y','v_z');
-    
-    
+
 
 hold off;
+
+  figure(41);
+    
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(11,:), '-','Color','#0072BD');
+    
+     hold on;
+     title('Shuttle and Target Velocity Evolution in North Axis');
+       plot(Ts*(1:sim_time/Ts + 1), shuttle_states(4,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('v_{n_{target}}','v_{n_{shuttle}}','Interpreter','tex');  
+     
+       ylabel('Velocity North Axis [m/s]');
+    xlabel('Time [s]');
+    
+ hold off;
+
+ figure(42);
+    
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(12,:), '-','Color','#0072BD');
+    
+     hold on;
+     title('Shuttle and Target Velocity Evolution in East Axis');
+       plot(Ts*(1:sim_time/Ts + 1), shuttle_states(5,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('v_{e_{target}}','v_{e_{shuttle}}','Interpreter','tex');  
+     
+       ylabel('Velocity East Axis [m/s]');
+    xlabel('Time [s]');
+    
+ hold off;
+ figure(43);
+    
+     plot(Ts*(1:sim_time/Ts + 1), shuttle_states(13,:), '-','Color','#0072BD');
+    
+     hold on;
+     title('Shuttle and Target Velocity Evolution in -Down Axis');
+       plot(Ts*(1:sim_time/Ts + 1), shuttle_states(6,:), '--','Color','#D95319','LineWidth',1.1);
+     
+     legend('v_{d_{target}}','v_{d_{shuttle}}','Interpreter','tex');  
+     
+       ylabel('Velocity -Down Axis [m/s]');
+        set(gca, 'Ydir', 'reverse');
+    xlabel('Time [s]');
+    
+ hold off;
+
+
 
   figure(5);
   
@@ -234,8 +344,10 @@ hold off;
      plot(Ts*(1:size(mpc_time_delay,2)) , mpc_time_delay);
   %  1:sim_time/Ts
      hold on;
-     title('Shasditions');
-      
+     title('MPC Computation Time');
+       
+       ylabel('MPC Computations Duration [s]');
+    xlabel('Time [s]');
      %plot(1:sim_time/T + 1, target_states(1:3,:), '--');
      %legend('x_{shuttle}','y_{shuttle}','z_{shuttle}','x_{target}','y_{target}','z_{target}','Interpreter','tex');  
     

@@ -3,6 +3,7 @@
 
 
 addpath('C:\Program Files\Polyspace\R2020a\bin\win64\casadi-3.6.3-windows64-matlab2018b')
+addpath('D:\Docments\Matlab\toolbox\casadi-3.6.3-windows64-matlab2018b')
 import casadi.*
 
 
@@ -36,13 +37,13 @@ f_cont = Function('f_cont',{xx,uu},{xdot},{'x','u'},{'ode'}); % last two represe
 % controller parameters
 Param.T = 5; % Time horizon
 Param.N = 25; % Number of control intervals
-Param.Q = blkdiag(6,6,5,2,2,0,1)*10;
-Param.R = blkdiag(1,1,1,1)*10;
+Param.Q = blkdiag(8,8,6,1,1,0,1)*10;
+Param.R = blkdiag(0.2,0.2,0.1,1)*10;
 Param.S = blkdiag(1,1)*0;
 %Param.S = blkdiag(1,1,1)*10;
 
-Param.closeness = 5;
-Param.height = 1.5;
+Param.closeness = 1.5;
+Param.height = 2;
 
 % Integrator to discretize the system
 intg_options = struct;
@@ -80,15 +81,18 @@ for k = 1:Param.N
       Param.distance = sqrt((Param.xx(1,k)-Param.xx(8,k))^2 + (Param.xx(2,k)-Param.xx(9,k))^2  ) ;
   Param.dZ =  if_else( Param.distance <= Param.closeness,0 ,Param.height );
     
+  %obj = obj + (Param.xx(1:7,k)-(Param.xx(8:14,k)-[0;0;Param.dZ+0.7;0;0;0;0]))'*Param.Q*(Param.xx(1:7,k)-(Param.xx(8:14,k)-[0;0;Param.dZ+0.7;0;0;0;0])) + Param.uu(:,k)'*Param.R*Param.uu(:,k) ...         
     obj = obj + (Param.xx(1:7,k)-(Param.xx(8:14,k)-[0;0;Param.dZ;0;0;0;0]))'*Param.Q*(Param.xx(1:7,k)-(Param.xx(8:14,k)-[0;0;Param.dZ;0;0;0;0])) + Param.uu(:,k)'*Param.R*Param.uu(:,k) ...
-      + (Param.xx(1:2,k)-[-90;37.33])'*Param.S*(Param.xx(1:2,k)-[-90;37.33]);         %um ponto no final da reta predefinida par o shuttle seguir tambem
+    + (Param.xx(1:2,k)-[-90;37.33])'*Param.S*(Param.xx(1:2,k)-[-90;37.33]);         %um ponto no final da reta predefinida par o shuttle seguir tambem
        %  + (Param.xx(4:6,k)-[8.5;0;0])'*Param.S*(Param.xx(4:6,k)-[8.5;0;0]);         %velocidade do shuttle para a frente tendo em conta a reta predifinida
 end
 
     Param.distance = sqrt((Param.xx(1,Param.N+1)-Param.xx(8,Param.N+1))^2 + (Param.xx(2,Param.N+1)-Param.xx(9,Param.N+1))^2  ) ;
   Param.dZ =  if_else( Param.distance <= Param.closeness,0 ,Param.height );
+
+ % obj = obj + (Param.xx(1:7,Param.N+1)-(Param.xx(8:14,Param.N+1)-[0;0;Param.dZ+0.7;0;0;0;0]))'*Param.Q*(Param.xx(1:7,Param.N+1)-(Param.xx(8:14,Param.N+1)-[0;0;Param.dZ+0.7;0;0;0;0])) ...
 obj = obj + (Param.xx(1:7,Param.N+1)-(Param.xx(8:14,Param.N+1)-[0;0;Param.dZ;0;0;0;0]))'*Param.Q*(Param.xx(1:7,Param.N+1)-(Param.xx(8:14,Param.N+1)-[0;0;Param.dZ;0;0;0;0])) ...
-            + (Param.xx(1:2,Param.N+1)-[-90;37.33])'*Param.S*(Param.xx(1:2,Param.N+1)-[-90;37.33]); 
+    + (Param.xx(1:2,Param.N+1)-[-90;37.33])'*Param.S*(Param.xx(1:2,Param.N+1)-[-90;37.33]); 
                  %   + (Param.xx(4:6,Param.N+1)-[8.5;0;0])'*Param.S*(Param.xx(4:6,Param.N+1)-[8.5;0;0]);  
 MPC.minimize(obj);
 
@@ -102,12 +106,13 @@ MPC.minimize(obj);
 % Dynamic constraints of the multiple shooting
 for k=1:Param.N
     MPC.subject_to(Param.xx(:,k+1) == f_disc(Param.xx(:,k),Param.uu(:,k))); % One step integration function predicts
-  % MPC.subject_to( Param.xx(11:13,k)'*Param.xx(4:6,k) >= 0);
-   % MPC.subject_to( (Param.xx(11:13,k)/norm(Param.xx(11:13,k)))'*(Param.xx(4:6,k)/norm(Param.xx(4:6,k))) >= 0);
-   MPC.subject_to(Param.xx(3,k) < Param.xx(14,k));
+  %MPC.subject_to( Param.xx(11:13,k)'*Param.xx(4:6,k) >= 0);
+
+  MPC.subject_to(Param.xx(3,k) < Param.xx(10,k) - 0.7 );
+  % MPC.subject_to(Param.xx(3,k) < Param.xx(10,k) );
     
     MPC.subject_to(-20 <= Param.xx(4:6,k) <= 20);
-    % MPC.subject_to(-5 <= Param.uu(1:3,k) <= 5); %accel
+    % MPC.subject_to(-15 <= Param.uu(1:3,k) <= 15); %accel
 end
 
 % opti.subject_to(u_min <= u <= u_max)

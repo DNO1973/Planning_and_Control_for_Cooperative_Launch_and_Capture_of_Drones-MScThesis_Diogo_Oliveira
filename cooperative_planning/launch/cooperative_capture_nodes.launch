@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+
+
+
+   <!--node pkg="cooperative_planning" type="field_test_offboard_shuttle_follower_controller_virtual_target" name="controller_node" output="screen"/--> 
+   <node pkg="cooperative_planning" type="shuttle_main_controller" name="controller_node" output="screen"/> 
+   <node pkg="cooperative_planning" type="state_machine.py" name="state_machine_node" /> 
+   <node pkg="smach_viewer" type="smach_viewer.py" name="state_machine_viewer_node"/> 
+
+
+
+ 
+
+</launch>

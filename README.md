@@ -1,16 +1,9 @@
 # MScThesis_Diogo-Oliveira
 
-Para correr a simulação do mps:
-* todos os ficheiros que são precisos estão na pasta mpc_simulation
-* fazer import do casadi na directoria correta com o addpath()
-* todo o codigo de interesse a mudar está no ficheiro mpc_setup.m, nas secções com titulo em comentario de "controller parameters", " Dynamic constraints of the multiple shooting" e "Optimal control problem using multiple-shooting".
+This repository contains all files regarding the development of my dissertation:
+* "cooperative_planning" is the ROS package with all the developed algorithms for the developed system to be integrated into the real hardware and in the ROS+GAZEBO+PX4 simulation environment.
+* "mpc_simulation" contains all MATLAB code of interest regarding the preliminary simulations for the cooperative capture scenario. "mpc_simulation_shuttle_and_target.m" represents the main file to run the MATLAB simulations, where "mpc_setup.m" and "mpc_setup_for_gazebo.m" represent the files with the definition of the MPC problem that can be tuned for the MATLAB simulations and the developed ROS-based system, respectively.
+* "path_following_simulations" contains SIMULINK simulations for the developed path-following algorithm for the target drone.
 
-Para correr a simulação do fixed wing com os exemplos de trajetórias:
 
-* configurar e correr o set_param_fixed_complex.m
-* correr a simulação simulate_fixed_complex_trajectories.slx
-* correr o show_fixed_complex_trajectories_results.m para ver os resultados
 
-Para correr a simulação também com o quadrotor, é igual mas com os ficheiros set_param_fixed_complex.m, set_param_quad.m, simulate_fixed_plus_quad.slx, e show_fixquad_sim_results.m.
-
-Na simulação simulate_fixed_drone.slx, dá para correr trajetórias em linha e orbitais independentemente, configurando-as através dos ficheiros set_param_fixed.m e show_fixed_sim_results.m.

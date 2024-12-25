@@ -1,4 +1,4 @@
-# Planning_and_Control_for_Cooperative_Launch_and_Capture_of_Drones - MScThesis_Diogo_Oliveira
+# Planning and Control for Cooperative Launch and Capture of Drones - MScThesis_Diogo_Oliveira (http://hdl.handle.net/10362/170844)
 
 This repository contains all files regarding the development of my dissertation:
 * "cooperative_planning" is the ROS package with all the developed algorithms for the developed system to be integrated into the real hardware and in the ROS+GAZEBO+PX4 simulation environment.
